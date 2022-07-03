@@ -1,0 +1,112 @@
+/* landing page banner */
+.lan-b-container {
+  padding: 3rem 0;
+}
+
+.lan-b-flex-box {
+  flex-direction: row;
+}
+
+.lan-b-flex-box > div {
+  flex-basis: 50%;
+  max-width: 50%;
+}
+
+.lan-b-box-image {
+}
+
+/* end landing page banner */
+
+/* landing page about  */
+
+.lan-ab-container {
+  padding: 3rem 0;
+}
+
+.lan-ab-container-bg-decor {
+  position: absolute;
+  width: 40%;
+  right: 0;
+  top: -38px;
+  z-index: -1;
+}
+
+.lan-ab-flex-box {
+  gap: 16px;
+}
+
+.lan-ab-flex-box > div:first-child {
+  flex-basis: 60%;
+  max-width: 60%;
+}
+
+.lan-ab-flex-box > div:last-child {
+  flex-basis: 40%;
+  max-width: 40%;
+}
+
+/* end landing page about  */
+
+/* landing page features  */
+.lan-f-features {
+  padding: 2rem 0;
+  justify-content: space-between;
+}
+
+.lan-f-feature-item {
+  border: 2px solid #49c2e7;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  max-width: 14.375rem;
+  flex-basis: 33.33%;
+}
+
+.lan-f-feature-item > div > h2 {
+  color: #49c2e7;
+  font-size: 24px;
+}
+
+.lan-f-feature-item > div > p {
+  color: #49c2e7;
+  font-size: 16px;
+  text-align: justify;
+}
+
+/* end landing page features  */
+
+/* landing page sell nft  */
+
+.lan-s-container {
+  margin-top: 2rem;
+}
+
+.lan-s-list {
+  padding: 2rem 0 1rem;
+  gap: 2rem;
+}
+
+.lan-s-item {
+  flex-basis: 33.33%;
+  max-width: 33.333%;
+}
+
+.lan-s-item > div > h2 {
+  font-size: 24px;
+  padding: 0.5rem 0;
+}
+
+.lan-s-item > div > p {
+  font-size: 16px;
+  color: gray;
+}
+
+/* end landing page sell nft  */
+
+/* landing page actions */
+
+.lan-a-container {
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+}
+
+/* end landing page actions */

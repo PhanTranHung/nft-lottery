@@ -1,0 +1,127 @@
+.page-content {
+  padding: 2rem 0;
+  padding-bottom: 5rem;
+}
+
+/* view detail nft */
+.v-d-box-image-container {
+  flex-basis: 30%;
+  min-width: 30%;
+}
+
+.v-d-title {
+  color: #2081e2;
+}
+
+.v-d-box-info {
+  flex-basis: 70%;
+  max-width: 70%;
+}
+
+.v-d-box-image {
+  border: 2px solid #e5e8eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.v-d-box-image-external-link {
+  padding: 8px;
+  color: #2081e2;
+}
+
+.v-d-box-little-text {
+  font-size: 0.75rem;
+  max-width: 100%;
+  user-select: none;
+  cursor: pointer;
+}
+
+.v-d-metadata-title {
+  color: gray;
+  margin-right: 0.25rem;
+}
+
+.v-d-metadata-value {
+  color: black;
+}
+
+.v-d-metadata-value {
+  color: black;
+}
+
+.v-d-divider {
+  border: none;
+  border-bottom: 2px solid #e5e8eb;
+  padding: 0;
+  margin: 0;
+}
+
+.v-d-metadata-price {
+  /* margin-top: 16px; */
+  /* border-top: 2px solid #e5e8eb; */
+}
+
+.v-d-metadata-price .v-d-metadata-value {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.v-d-accordion {
+  border: 2px solid #e5e8eb;
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.v-d-accordion > div > div {
+  border: none;
+}
+
+.v-d-metadata-des {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.v-d-metadata-container {
+  margin-top: 0.5rem;
+  border: 2px solid #e5e8eb;
+  border-radius: 0.5rem;
+  gap: 1rem;
+}
+
+.v-d-metadata-container > div:first-of-type {
+  padding: 1rem 1rem 0;
+}
+.v-d-metadata-container > div:nth-of-type(2) {
+  padding: 0 1rem 1rem;
+}
+
+.v-d-metadata-container-inner {
+  align-items: center;
+  justify-content: start;
+}
+
+.v-d-metadata-container-inner > div {
+  flex-basis: 50%;
+}
+
+.v-d-currency-unit-icon {
+  position: relative;
+}
+
+.v-d-coundown-container {
+  border: 2px solid #e5e8eb;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+.v-d-coundown {
+  font-size: 2.625rem;
+  font-weight: 700;
+}
+.v-d- {
+}
+.v-d- {
+}
+
+/* end view detail nft */

@@ -1,0 +1,51 @@
+.l-nft-wrapper {
+  padding: 3rem 0;
+}
+
+.l-title {
+  color: #2081e2;
+}
+
+/* browse NFT  */
+
+.l-b-nft-wrapper {
+  padding: 1rem 0;
+}
+
+.l-b-wrap-box {
+  gap: 2rem 1rem;
+}
+
+/* end browse NFT  */
+
+/* NFT item  */
+
+.l-i-nft-box {
+  overflow: hidden;
+  border-radius: 0.5rem;
+  flex-basis: calc(25% - 0.75rem);
+  max-width: calc(25% - 0.75rem);
+  border: 2px solid #e5e8eb;
+}
+
+.l-i-title {
+  font-size: 1.25rem !important;
+}
+
+.l-i-nft-box-padding {
+  padding: 0.5rem;
+  /* padding: 0.5rem; */
+}
+
+.l-i-metada-title {
+  color: gray;
+}
+.l-i-metada-value {
+}
+
+.l-i-button {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* end NFT item  */
