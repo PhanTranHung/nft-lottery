@@ -1,6 +1,7 @@
 import { Box, FormControl, Heading, Text } from '@chakra-ui/react';
 import Button from '../../components/Button';
 import Container from '../../components/Container';
+import Input from '../../components/Input';
 
 const FormApproveNFT: React.FC = () => {
   return (
@@ -21,6 +22,12 @@ const FormApproveNFT: React.FC = () => {
 
             <Box paddingTop={'0.5rem'}>
               <FormControl>
+                <Box>
+                  <Input name="pool-address" label="Pool Address" type="text" />
+                </Box>
+                <Box>
+                  <Input name="amount" label="Amout" type="text" />
+                </Box>
                 <Box>
                   <Text>Your LINK Balance: 0.000000</Text>
                   <Button colorScheme={'blue'}>Link Approved</Button>
