@@ -18,7 +18,7 @@ export default function Header() {
     connector.activate();
   };
 
-  console.log(connector, account, accounts, hooks, provider, isActivating, isActive, chainId, ENSName, ENSNames);
+  // console.log(connector, account, accounts, hooks, provider, isActivating, isActive, chainId, ENSName, ENSNames);
 
   const handleCopyAddress = () => {
     window.navigator.clipboard.writeText(account ?? '');

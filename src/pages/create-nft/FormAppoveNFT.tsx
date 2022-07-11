@@ -1,9 +1,36 @@
 import { Box, FormControl, Heading, Text } from '@chakra-ui/react';
+import { useWeb3React } from '@web3-react/core';
+import { formatUnits, parseUnits } from 'ethers/lib/utils';
+import { ChangeEvent, useState } from 'react';
+import { LINK } from '../../address';
 import Button from '../../components/Button';
 import Container from '../../components/Container';
 import Input from '../../components/Input';
+import { useERC20ContractFunction, useTokenERC20Balance } from '../../contracts/ERC20/hooks';
 
 const FormApproveNFT: React.FC = () => {
+  const [amount, setAmount] = useState('');
+  const { account } = useWeb3React();
+
+  const approve = useERC20ContractFunction(LINK, 'approve');
+
+  const { balance: bigTokenLinkBalance, fetch } = useTokenERC20Balance(LINK, account);
+
+  // console.log(bigTokenLinkBalance);
+
+  const tokenLinkBalance = formatUnits(bigTokenLinkBalance, 18);
+
+  const handleAmountChange = (elm: ChangeEvent<HTMLInputElement>) => {
+    setAmount(elm.target.value);
+  };
+
+  const handleApprove = async () => {
+    const bigAmount = parseUnits(amount);
+
+    console.log(bigAmount);
+
+    const txResult = await approve.send(LINK, bigAmount);
+  };
   return (
     <>
       <Box>
@@ -23,14 +50,13 @@ const FormApproveNFT: React.FC = () => {
             <Box paddingTop={'0.5rem'}>
               <FormControl>
                 <Box>
-                  <Input name="pool-address" label="Pool Address" type="text" />
+                  <Input name="amount" label="Amout" type="text" value={amount} onChange={handleAmountChange} />
                 </Box>
                 <Box>
-                  <Input name="amount" label="Amout" type="text" />
-                </Box>
-                <Box>
-                  <Text>Your LINK Balance: 0.000000</Text>
-                  <Button colorScheme={'blue'}>Link Approved</Button>
+                  <Text>Your LINK Balance: {tokenLinkBalance}</Text>
+                  <Button colorScheme={'blue'} onClick={handleApprove}>
+                    Link Approved
+                  </Button>
                 </Box>
               </FormControl>
             </Box>

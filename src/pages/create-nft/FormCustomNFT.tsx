@@ -1,9 +1,16 @@
 import { Box, FormControl, Heading, Text } from '@chakra-ui/react';
+import { useState } from 'react';
 import Button from '../../components/Button';
 import Container from '../../components/Container';
 import Input from '../../components/Input';
 
 const FormCustomNFT: React.FC = () => {
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [minSell, setMinSell] = useState('');
+  const [maxSell, setMaxSell] = useState('');
+  const [maxHold, setMaxHold] = useState('');
+  const [price, setSrice] = useState('');
   return (
     <>
       <Box>
