@@ -3,6 +3,7 @@ import { useWeb3React } from '@web3-react/core';
 import { formatUnits, parseEther, parseUnits } from 'ethers/lib/utils';
 import { ChangeEvent, useState } from 'react';
 import { LINK, LOTTERY_FACTORY } from '../../address';
+import { LoadingSVG } from '../../assets/Loading';
 import Button from '../../components/Button';
 import Container from '../../components/Container';
 import Input from '../../components/Input';
@@ -11,6 +12,7 @@ import { useERC20ContractFunction, useTokenERC20Balance } from '../../contracts/
 const FormApproveNFT: React.FC = () => {
   const [amount, setAmount] = useState('');
   const { account } = useWeb3React();
+  const [isSending, setSending] = useState(false);
 
   const approve = useERC20ContractFunction(LINK, 'approve');
 
@@ -26,10 +28,15 @@ const FormApproveNFT: React.FC = () => {
 
   const handleApprove = async () => {
     const bigAmount = parseEther(amount);
-
-    console.log(bigAmount);
-
-    const txResult = await approve.send(LOTTERY_FACTORY, bigAmount);
+    try {
+      setSending(true);
+      const txResult = await approve.send(LOTTERY_FACTORY, bigAmount);
+      console.log(txResult);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSending(false);
+    }
   };
   return (
     <>
@@ -54,8 +61,8 @@ const FormApproveNFT: React.FC = () => {
                 </Box>
                 <Box>
                   <Text>Your LINK Balance: {tokenLinkBalance}</Text>
-                  <Button colorScheme={'blue'} onClick={handleApprove}>
-                    Link Approved
+                  <Button colorScheme={'blue'} onClick={handleApprove} disabled={isSending}>
+                    Link Approved {isSending && <LoadingSVG />}
                   </Button>
                 </Box>
               </FormControl>

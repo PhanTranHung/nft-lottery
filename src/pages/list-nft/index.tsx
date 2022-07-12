@@ -8,7 +8,7 @@ import { useGetAllPool } from '../../contracts/NFTLottetyPoolFactory/hooks';
 const ListNFT: React.FC = () => {
   const { allPool, fetch } = useGetAllPool();
 
-  console.log(allPool);
+  console.log('allPool', allPool);
 
   return (
     <>

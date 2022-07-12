@@ -2,6 +2,7 @@ import { Box, FormControl, Heading, Text } from '@chakra-ui/react';
 import { isAddress } from 'ethers/lib/utils';
 import { ChangeEvent, useState } from 'react';
 import { LOTTERY_FACTORY } from '../../address';
+import { LoadingSVG } from '../../assets/Loading';
 import Button from '../../components/Button';
 import Container from '../../components/Container';
 import Input from '../../components/Input';
@@ -14,6 +15,7 @@ const FormSelectNFT: React.FC<{
   address?: string;
   id?: string;
 }> = ({ address = '', id = '', onAddressChange = () => {}, onIdChange = () => {} }) => {
+  const [isSending, setSending] = useState(false);
   const approve = useERC721ContractFunction(address.trim(), 'approve');
   const transferNft = useNFTLotteryPoolFunction('transferNft');
 
@@ -23,13 +25,19 @@ const FormSelectNFT: React.FC<{
 
     if (!isAddress(nftAddress)) return console.log('Error...');
 
+    setSending(true);
     try {
       const txResult = await approve.send(LOTTERY_FACTORY, tokenId);
+      console.log('approve:', txResult);
+
       if (txResult) {
         const rs = await transferNft.send(nftAddress, tokenId);
+        console.log('transfer:', rs);
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -62,8 +70,8 @@ const FormSelectNFT: React.FC<{
                   <Input name="nft-id" label="ID" type="text" value={id} onChange={onIdChange} />
                 </Box>
                 <Box>
-                  <Button colorScheme={'blue'} onClick={handleTransferNFT} type="submit">
-                    Transfer NFT
+                  <Button colorScheme={'blue'} onClick={handleTransferNFT} type="submit" disabled={isSending}>
+                    Transfer NFT {isSending && <LoadingSVG />}
                   </Button>
                 </Box>
               </FormControl>

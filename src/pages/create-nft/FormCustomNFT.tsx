@@ -2,12 +2,14 @@ import { Box, FormControl, Heading, Text } from '@chakra-ui/react';
 import { BigNumber } from 'ethers';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
 import React, { ChangeEvent, useState } from 'react';
+import { LoadingSVG } from '../../assets/Loading';
 import Button from '../../components/Button';
 import Container from '../../components/Container';
 import Input from '../../components/Input';
 import { useNFTLotteryPoolFunction } from '../../contracts/NFTLottetyPoolFactory/hooks';
 
 const FormCustomNFT: React.FC<{ nftAddress: string; tokenId: string }> = ({ nftAddress, tokenId }) => {
+  const [isSending, setSending] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [minSell, setMinSell] = useState('');
@@ -40,17 +42,29 @@ const FormCustomNFT: React.FC<{ nftAddress: string; tokenId: string }> = ({ nftA
 
     const bigPrice = parseUnits(price ?? '0');
 
-    const txResult = await createNFTLotteryPool.send(
-      nftAddress,
-      tokenId,
-      startDate,
-      endDate,
-      minSell,
-      maxSell,
-      maxHold,
-      bigPrice,
-      { value: parseEther('0.001') }
-    );
+    try {
+      setSending(true);
+      const txResult = await createNFTLotteryPool.send(
+        nftAddress,
+        tokenId,
+        startDate,
+        endDate,
+        minSell,
+        maxSell,
+        maxHold,
+        bigPrice,
+        {
+          value: parseEther('0.001'),
+          gasLimit: 900000000,
+        }
+      );
+
+      console.log('create success', txResult);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -118,8 +132,8 @@ const FormCustomNFT: React.FC<{ nftAddress: string; tokenId: string }> = ({ nftA
                   />
                 </Box>
                 <Box>
-                  <Button colorScheme={'blue'} onClick={handleCreateLottery} type="submit">
-                    Create Lottery
+                  <Button colorScheme={'blue'} onClick={handleCreateLottery} type="submit" disabled={isSending}>
+                    Create Lottery {isSending && <LoadingSVG />}
                   </Button>
                 </Box>
               </FormControl>
