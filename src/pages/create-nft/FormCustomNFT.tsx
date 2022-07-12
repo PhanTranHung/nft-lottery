@@ -1,16 +1,58 @@
 import { Box, FormControl, Heading, Text } from '@chakra-ui/react';
-import { useState } from 'react';
+import { BigNumber } from 'ethers';
+import { parseEther, parseUnits } from 'ethers/lib/utils';
+import React, { ChangeEvent, useState } from 'react';
 import Button from '../../components/Button';
 import Container from '../../components/Container';
 import Input from '../../components/Input';
+import { useNFTLotteryPoolFunction } from '../../contracts/NFTLottetyPoolFactory/hooks';
 
-const FormCustomNFT: React.FC = () => {
+const FormCustomNFT: React.FC<{ nftAddress: string; tokenId: string }> = ({ nftAddress, tokenId }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [minSell, setMinSell] = useState('');
   const [maxSell, setMaxSell] = useState('');
   const [maxHold, setMaxHold] = useState('');
-  const [price, setSrice] = useState('');
+  const [price, setPrice] = useState('');
+
+  const createNFTLotteryPool = useNFTLotteryPoolFunction('createNFTLotteryPool');
+
+  const handleStartDateChange = (elm: ChangeEvent<HTMLInputElement>) => {
+    setStartDate(elm.target.value);
+  };
+  const handleEndDateChange = (elm: ChangeEvent<HTMLInputElement>) => {
+    setEndDate(elm.target.value);
+  };
+  const handleMinSellChange = (elm: ChangeEvent<HTMLInputElement>) => {
+    setMinSell(elm.target.value);
+  };
+  const handleMaxSellChange = (elm: ChangeEvent<HTMLInputElement>) => {
+    setMaxSell(elm.target.value);
+  };
+  const handleMaxHoldChange = (elm: ChangeEvent<HTMLInputElement>) => {
+    setMaxHold(elm.target.value);
+  };
+  const handlePriceChange = (elm: ChangeEvent<HTMLInputElement>) => {
+    setPrice(elm.target.value);
+  };
+  const handleCreateLottery = async () => {
+    console.log(startDate, endDate, minSell, maxSell, maxHold, price);
+
+    const bigPrice = parseUnits(price ?? '0');
+
+    const txResult = await createNFTLotteryPool.send(
+      nftAddress,
+      tokenId,
+      startDate,
+      endDate,
+      minSell,
+      maxSell,
+      maxHold,
+      bigPrice,
+      { value: parseEther('0.001') }
+    );
+  };
+
   return (
     <>
       <Box>
@@ -28,29 +70,57 @@ const FormCustomNFT: React.FC = () => {
             <Box paddingTop={'0.5rem'}>
               <FormControl>
                 <Box>
-                  <Input name="start-date" label="Start Date" type="text" />
+                  <Input
+                    value={startDate}
+                    onChange={handleStartDateChange}
+                    name="start-date"
+                    label="Start Date"
+                    type="text"
+                  />
                 </Box>
                 <Box>
-                  <Input name="end-date" label="End Date" type="text" />
-                </Box>
-                <Box>
-                  <Input name="minimun-to-sell" label="Minimum Tickets To Sell (Must be at least 1)" type="text" />
-                </Box>
-                <Box>
-                  <Input name="maximun-to-sell" label="Maximum Tickets To Sell" type="text" />
+                  <Input value={endDate} onChange={handleEndDateChange} name="end-date" label="End Date" type="text" />
                 </Box>
                 <Box>
                   <Input
+                    value={minSell}
+                    onChange={handleMinSellChange}
+                    name="minimun-to-sell"
+                    label="Minimum Tickets To Sell (Must be at least 1)"
+                    type="text"
+                  />
+                </Box>
+                <Box>
+                  <Input
+                    value={maxSell}
+                    onChange={handleMaxSellChange}
+                    name="maximun-to-sell"
+                    label="Maximum Tickets To Sell"
+                    type="text"
+                  />
+                </Box>
+                <Box>
+                  <Input
+                    value={maxHold}
+                    onChange={handleMaxHoldChange}
                     name="maximun-con-hold"
                     label="Hold (The maximum number of tickets an address can hold. Must be at least 1.)"
                     type="text"
                   />
                 </Box>
                 <Box>
-                  <Input name="nft-price" label="Ticket Price (The price in ETH for each ticket)" type="text" />
+                  <Input
+                    value={price}
+                    onChange={handlePriceChange}
+                    name="nft-price"
+                    label="Ticket Price (The price in ETH for each ticket)"
+                    type="text"
+                  />
                 </Box>
                 <Box>
-                  <Button colorScheme={'blue'}>Create Lottery</Button>
+                  <Button colorScheme={'blue'} onClick={handleCreateLottery} type="submit">
+                    Create Lottery
+                  </Button>
                 </Box>
               </FormControl>
             </Box>

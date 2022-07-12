@@ -3,10 +3,11 @@ import NFTItem, { NFTItemProps } from './NFTItem';
 
 export interface BrowseNFTProps {
   nfts: NFTItemProps[];
+  pools?: string[];
   children?: React.ReactNode;
 }
 
-const BrowseNFT: React.FC<BrowseNFTProps> = ({ nfts, children }) => {
+const BrowseNFT: React.FC<BrowseNFTProps> = ({ nfts, pools = [], children }) => {
   return (
     <>
       <Box className="l-b-nft-wrapper">

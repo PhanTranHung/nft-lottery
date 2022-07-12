@@ -125,7 +125,7 @@ export const useContractCall = <T = any>(
         console.error('Provider is not initilazed yet');
       }
     },
-
+    //@ts-ignore
     [provider, call?.contract, call?.method]
   );
   return { value, fetch: handleFetchData };

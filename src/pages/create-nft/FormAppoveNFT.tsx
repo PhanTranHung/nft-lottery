@@ -1,8 +1,8 @@
 import { Box, FormControl, Heading, Text } from '@chakra-ui/react';
 import { useWeb3React } from '@web3-react/core';
-import { formatUnits, parseUnits } from 'ethers/lib/utils';
+import { formatUnits, parseEther, parseUnits } from 'ethers/lib/utils';
 import { ChangeEvent, useState } from 'react';
-import { LINK } from '../../address';
+import { LINK, LOTTERY_FACTORY } from '../../address';
 import Button from '../../components/Button';
 import Container from '../../components/Container';
 import Input from '../../components/Input';
@@ -25,11 +25,11 @@ const FormApproveNFT: React.FC = () => {
   };
 
   const handleApprove = async () => {
-    const bigAmount = parseUnits(amount);
+    const bigAmount = parseEther(amount);
 
     console.log(bigAmount);
 
-    const txResult = await approve.send(LINK, bigAmount);
+    const txResult = await approve.send(LOTTERY_FACTORY, bigAmount);
   };
   return (
     <>

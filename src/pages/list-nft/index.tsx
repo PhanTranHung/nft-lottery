@@ -3,8 +3,13 @@ import Container from '../../components/Container';
 import BrowseNFT from './BrowseNFT';
 import { NFTItemProps } from './NFTItem';
 import './index.css';
+import { useGetAllPool } from '../../contracts/NFTLottetyPoolFactory/hooks';
 
 const ListNFT: React.FC = () => {
+  const { allPool, fetch } = useGetAllPool();
+
+  console.log(allPool);
+
   return (
     <>
       <Box className="l-nft-wrapper">
@@ -16,7 +21,7 @@ const ListNFT: React.FC = () => {
               </Heading>
             </Center>
           </Box>
-          <BrowseNFT nfts={listNFTs} />
+          <BrowseNFT nfts={listNFTs} pools={allPool ?? []} />
         </Container>
       </Box>
     </>

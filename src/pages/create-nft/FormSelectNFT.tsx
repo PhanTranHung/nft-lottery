@@ -5,34 +5,28 @@ import { LOTTERY_FACTORY } from '../../address';
 import Button from '../../components/Button';
 import Container from '../../components/Container';
 import Input from '../../components/Input';
-import { getERC721Contract } from '../../contracts/ERC721';
 import { useERC721ContractFunction } from '../../contracts/ERC721/hooks';
 import { useNFTLotteryPoolFunction } from '../../contracts/NFTLottetyPoolFactory/hooks';
 
-const FormSelectNFT: React.FC = () => {
-  const [nftAddress, setNFTAddress] = useState('');
-  const [tokenId, setTokenId] = useState('');
-
-  const approve = useERC721ContractFunction(nftAddress.trim(), 'approve');
+const FormSelectNFT: React.FC<{
+  onAddressChange?: (elm: ChangeEvent<HTMLInputElement>) => void;
+  onIdChange?: (elm: ChangeEvent<HTMLInputElement>) => void;
+  address?: string;
+  id?: string;
+}> = ({ address = '', id = '', onAddressChange = () => {}, onIdChange = () => {} }) => {
+  const approve = useERC721ContractFunction(address.trim(), 'approve');
   const transferNft = useNFTLotteryPoolFunction('transferNft');
 
-  const handleNFTAddressChange = (elm: ChangeEvent<HTMLInputElement>) => {
-    setNFTAddress(elm.target.value);
-  };
-  const handleTokenIdChange = (elm: ChangeEvent<HTMLInputElement>) => {
-    setTokenId(elm.target.value);
-  };
-
   const handleTransferNFT = async () => {
-    const address = nftAddress.trim();
-    const id = tokenId.trim();
+    const nftAddress = address.trim();
+    const tokenId = id.trim();
 
-    if (!isAddress(address)) return console.log('Error...');
+    if (!isAddress(nftAddress)) return console.log('Error...');
 
     try {
-      const txResult = await approve.send(LOTTERY_FACTORY, id);
+      const txResult = await approve.send(LOTTERY_FACTORY, tokenId);
       if (txResult) {
-        const rs = await transferNft.send(address, id);
+        const rs = await transferNft.send(nftAddress, tokenId);
       }
     } catch (error) {
       console.log(error);
@@ -60,15 +54,15 @@ const FormSelectNFT: React.FC = () => {
                     name="nft-address"
                     label="NFT Address"
                     type="text"
-                    value={nftAddress}
-                    onChange={handleNFTAddressChange}
+                    value={address}
+                    onChange={onAddressChange}
                   />
                 </Box>
                 <Box>
-                  <Input name="nft-id" label="ID" type="text" value={tokenId} onChange={handleTokenIdChange} />
+                  <Input name="nft-id" label="ID" type="text" value={id} onChange={onIdChange} />
                 </Box>
                 <Box>
-                  <Button colorScheme={'blue'} onClick={handleTransferNFT}>
+                  <Button colorScheme={'blue'} onClick={handleTransferNFT} type="submit">
                     Transfer NFT
                   </Button>
                 </Box>
