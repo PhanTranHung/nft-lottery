@@ -8,10 +8,10 @@ const Actions: React.FC = () => {
         <Container>
           <Center>
             <Flex justifyContent={'center'} gap="2rem">
-              <Button as={'a'} colorScheme="blue" href={'create-nft'} variant="outline">
+              <Button as={'a'} colorScheme="blue" href={'create-lottery'} variant="outline">
                 Create Lottery
               </Button>
-              <Button as={'a'} colorScheme="blue" href={'list-nft'}>
+              <Button as={'a'} colorScheme="blue" href={'list-lottery'}>
                 Recently Lottery
               </Button>
             </Flex>

@@ -83,7 +83,7 @@ const NFTItem: React.FC<NFTItemProps> = ({
                 <Image className="v-d-currency-unit-icon" w="25px" h="25px" src="/assets/icons/icons-eth.svg" />
               </HStack>
             </Flex>
-            <Link to="/view-nft">
+            <Link to="/view-lottery">
               <Button className="l-i-button" colorScheme={'blue'}>
                 Buy now
               </Button>

@@ -40,12 +40,12 @@ export default function Header() {
                 Home
               </Button>
             </Link>
-            <Link to="/list-nft">
+            <Link to="/list-lottery">
               <Button colorScheme="blue" variant="link">
                 Lottery
               </Button>
             </Link>
-            <Link to="/create-nft">
+            <Link to="/create-lottery">
               <Button colorScheme="blue" variant="link">
                 Create
               </Button>

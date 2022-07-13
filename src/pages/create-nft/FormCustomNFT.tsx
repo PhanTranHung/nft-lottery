@@ -55,7 +55,6 @@ const FormCustomNFT: React.FC<{ nftAddress: string; tokenId: string }> = ({ nftA
         bigPrice,
         {
           value: parseEther('0.001'),
-          gasLimit: 900000000,
         }
       );
 

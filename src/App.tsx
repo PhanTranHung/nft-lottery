@@ -11,9 +11,9 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="create-nft" element={<CreateNFT />} />
-          <Route path="view-nft" element={<ViewNFT />} />
-          <Route path="list-nft" element={<ListNFT />} />
+          <Route path="create-lottery" element={<CreateNFT />} />
+          <Route path="view-lottery/:poolAddress" element={<ViewNFT />} />
+          <Route path="list-lottery" element={<ListNFT />} />
         </Routes>
       </Layout>
     </div>

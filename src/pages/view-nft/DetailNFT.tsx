@@ -19,6 +19,22 @@ import {
 import Countdown, { CountdownRendererFn } from 'react-countdown';
 import ShortString from '../../components/ShortString';
 import { BiCopy, BiLinkExternal } from 'react-icons/bi';
+import { useParams } from 'react-router-dom';
+import { useTokenURI } from '../../contracts/ERC721/hooks';
+import { useMoralis, useMoralisWeb3Api } from 'react-moralis';
+import { useEffect, useState } from 'react';
+import { DEFAULT_CHAIN_NAME } from '../../config';
+import { INFTMetadata } from '../../types';
+import { parseNFTMetadata } from '../../utils/nftMetadata';
+import { MagicImage } from '../../components/Image';
+import {
+  usePoolEndDate,
+  usePoolMaxTicketsToSell,
+  usePoolNFTPrize,
+  usePoolNFTPrizeTokenId,
+  usePoolTicketPrice,
+} from '../../contracts/NFTLotteryPool/hooks';
+import { formatEther } from 'ethers/lib/utils';
 
 export interface DetailNFTProps {
   children?: React.ReactNode;
@@ -27,9 +43,44 @@ export interface DetailNFTProps {
 const DetailNFT: React.FC = () => {
   const supply = 100;
   const remaining = 0;
-  const price = 50;
-
   const soldOut = remaining == 0;
+  const { poolAddress = '' } = useParams();
+  const { Moralis, isWeb3Enabled } = useMoralis();
+  const { token } = useMoralisWeb3Api();
+  const [nftMetadata, setNFTMetadata] = useState<INFTMetadata>();
+  const NFTPrize = usePoolNFTPrize({
+    poolAddress: poolAddress,
+  });
+  const NFTPrizeTokenId = usePoolNFTPrizeTokenId({
+    poolAddress: poolAddress,
+  });
+  const ticketPrice = usePoolTicketPrice({
+    poolAddress: poolAddress,
+  });
+  const endDate = usePoolEndDate({
+    poolAddress: poolAddress,
+  });
+  const maxToSell = usePoolMaxTicketsToSell({
+    poolAddress: poolAddress,
+  });
+
+  useEffect(() => {
+    if (isWeb3Enabled && NFTPrize.address && NFTPrizeTokenId.tokenId) {
+      token
+        .getTokenIdMetadata({
+          address: NFTPrize.address,
+          token_id: NFTPrizeTokenId.tokenId,
+          chain: DEFAULT_CHAIN_NAME,
+        })
+        .then((data) => {
+          const dataParsed = parseNFTMetadata(data);
+          setNFTMetadata(dataParsed);
+        })
+        .catch((e) => console.error(e));
+    }
+  }, [isWeb3Enabled, token, NFTPrize.address, NFTPrizeTokenId.tokenId]);
+
+  console.log('data', endDate);
 
   // Renderer callback with condition
   const coundownRenderer: CountdownRendererFn = ({ completed, formatted: { days, hours, minutes, seconds } }) => {
@@ -52,6 +103,8 @@ const DetailNFT: React.FC = () => {
     }
   };
 
+  const price = formatEther(ticketPrice.bigPrice);
+
   return (
     <>
       <Flex direction={'row'} gap={'1rem'}>
@@ -59,7 +112,7 @@ const DetailNFT: React.FC = () => {
           <Box className="v-d-box-image">
             <Center>
               <Box>
-                <Image src="/assets/images/nft-image-2.png" />
+                <MagicImage src={nftMetadata?.metadata_parsed?.image} />
               </Box>
             </Center>
             <Box>
@@ -80,21 +133,27 @@ const DetailNFT: React.FC = () => {
               </Heading>
               <Box className="v-d-box-little-text">
                 <HStack>
-                  <ShortString str="0xd7F36d390B357984D2387129Bc796B1Be1A28cCC" />
+                  <ShortString str={poolAddress} />
                   <BiCopy />
                 </HStack>
               </Box>
             </Box>
             <Box className="v-d-coundown-container ">
               <Center className="v-d-coundown">
-                <Countdown date={1657767924151} renderer={coundownRenderer} />
+                {endDate.timestamp ? (
+                  <Countdown date={endDate.timestamp} renderer={coundownRenderer} />
+                ) : (
+                  <>
+                    <Box>--:--:--:--</Box>
+                  </>
+                )}
               </Center>
             </Box>
             <Flex direction={'column'} alignItems="stretch" className="v-d-metadata-container">
               <Flex className="v-d-metadata-container-inner">
                 <Flex>
                   <Text className="v-d-metadata-title">Supply: </Text>
-                  <Text className="v-d-metadata-value">{supply}</Text>
+                  <Text className="v-d-metadata-value">{maxToSell.amount}</Text>
                 </Flex>
                 <Flex>
                   <Text className="v-d-metadata-title">Remaining: </Text>
@@ -127,12 +186,7 @@ const DetailNFT: React.FC = () => {
                     </AccordionButton>
                   </h2>
                   <AccordionPanel pb={4}>
-                    <Box className="v-d-metadata-des">
-                      Capsule House is Seerlight and Kaejunni's first NFT collection. This collection consists of 10,000
-                      unique gachapon NFTs - a digital version of the collectible toys popular in Japan. With over 120
-                      variants and endless combinations of traits, each Capsule NFT contains a verifiably rare and
-                      unique gachapon artwork.
-                    </Box>
+                    <Box className="v-d-metadata-des">{nftMetadata?.metadata_parsed?.description}</Box>
                   </AccordionPanel>
                 </AccordionItem>
               </Accordion>

@@ -34,3 +34,21 @@ export const useOwnerOfNFT = (address: string, tokenId: string) => {
 
   return { owner: value, fetch };
 };
+
+export const useTokenURI = (address: string, tokenId: string) => {
+  let erc721Contract = useMemo(() => getERC721Contract(constants.AddressZero), []);
+
+  try {
+    erc721Contract = getERC721Contract(address);
+  } catch (error) {
+    // console.log(error);
+  }
+
+  const { value, fetch } = useContractCall({
+    contract: erc721Contract,
+    method: 'tokenURI',
+    args: [tokenId],
+  });
+
+  return { uri: value, fetch };
+};
