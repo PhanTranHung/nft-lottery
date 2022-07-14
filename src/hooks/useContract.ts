@@ -9,9 +9,10 @@ export interface ITransactionOptions {
 }
 
 export interface ITransactionState {
-  status: 'PendingSignature' | 'Mining' | 'Success' | 'Fail' | 'None';
+  status: 'PendingSignature' | 'Mining' | 'Success' | 'Fail' | 'Exception' | 'None';
   transaction?: ethers.providers.TransactionResponse;
   receipt?: ethers.providers.TransactionReceipt;
+  message?: string | Error;
 }
 
 export function connectContractToSigner(
@@ -31,7 +32,11 @@ export function connectContractToSigner(
   throw new TypeError('No signer available in contract, options or library');
 }
 
-export const useContractFunction = (contract: ethers.Contract, functionName: string, options?: ITransactionOptions) => {
+export const useContractFunction = (
+  contract: ethers.Contract | undefined,
+  functionName: string | undefined,
+  options?: ITransactionOptions
+) => {
   const [state, setState] = useState<ITransactionState>({
     status: 'None',
   });
@@ -39,8 +44,17 @@ export const useContractFunction = (contract: ethers.Contract, functionName: str
   const { provider, account } = useWeb3React();
 
   const send = useCallback(
-    async (...params: any[]): Promise<ITransactionState | undefined> => {
+    async (...params: any[]): Promise<ITransactionState> => {
       if (provider && account) {
+        if (!contract || !functionName) {
+          const error: ITransactionState = {
+            status: 'Exception',
+            message: 'Contract or method is invalid!',
+          };
+          setState(error);
+          return error;
+        }
+
         try {
           setState({
             status: 'PendingSignature',
@@ -68,14 +82,23 @@ export const useContractFunction = (contract: ethers.Contract, functionName: str
           console.error(error);
           setState({
             status: 'Fail',
+            message: error,
           });
 
           return {
             status: 'Fail',
+            message: error,
           };
         }
       } else {
         console.error('Provider is not initilazed yet');
+
+        const error: ITransactionState = {
+          status: 'Exception',
+          message: 'Provider is not initilazed yet',
+        };
+        setState(error);
+        return error;
       }
     },
     [provider, contract, functionName, options]

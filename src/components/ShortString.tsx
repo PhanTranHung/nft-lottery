@@ -2,11 +2,11 @@ import { Box, Flex, HStack, Image, Text, VStack } from '@chakra-ui/react';
 import { useMemo } from 'react';
 
 interface IProps {
-  str: string;
+  str?: string;
   slice?: [start: number, end: number];
   children?: React.ReactNode;
 }
-const ShortString: React.FC<IProps> = ({ str, slice = [6, 4], children }) => {
+const ShortString: React.FC<IProps> = ({ str = '', slice = [6, 4], children }) => {
   const { start, end } = useMemo(() => {
     const start = str.slice(0, str.length - slice[1]);
     const end = str.slice(slice[1] * -1);

@@ -1,5 +1,5 @@
 .page-content {
-  padding: 2rem 0;
+  padding: 4rem 0;
   padding-bottom: 5rem;
 }
 
@@ -65,6 +65,7 @@
 .v-d-metadata-price .v-d-metadata-value {
   font-size: 32px;
   font-weight: 700;
+  line-height: 70px;
 }
 
 .v-d-accordion {

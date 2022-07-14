@@ -30,7 +30,7 @@ const FormSelectNFT: React.FC<{
       const txResult = await approve.send(LOTTERY_FACTORY, tokenId);
       console.log('approve:', txResult);
 
-      if (txResult) {
+      if (txResult.status === 'Success') {
         const rs = await transferNft.send(nftAddress, tokenId);
         console.log('transfer:', rs);
       }

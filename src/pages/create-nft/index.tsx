@@ -18,8 +18,7 @@ const CreateNFT: React.FC = () => {
     setTokenId(elm.target.value);
   };
 
-  const a = useOwnerOfNFT('0x748F5120aA69516a6A52b9a850F9a93759C5F1D5', '1');
-
+  const a = useOwnerOfNFT('0x1449a44476Bb773934f4A6397d3e7971c90Fab90', '3');
   console.log(a);
 
   return (

@@ -1,3 +1,7 @@
+# NFT-Lottery contract repo
+
+[nft-lottery-vrf](https://github.com/sinhvienit17/nft-lottery-vrf)
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
