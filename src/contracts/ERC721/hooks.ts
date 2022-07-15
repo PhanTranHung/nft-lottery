@@ -17,38 +17,32 @@ export const useERC721ContractFunction = (address: string, methodName: string, o
   return { resetState, send, state };
 };
 
-export const useOwnerOfNFT = (address: string, tokenId: string) => {
-  let erc721Contract = useMemo(() => getERC721Contract(constants.AddressZero), []);
+export const useOwnerOfNFT = (address: string = '', tokenId: string | number | undefined) => {
+  const contract = useMemo(() => getERC721Contract(address), [address]) ?? undefined;
 
-  try {
-    erc721Contract = getERC721Contract(address);
-  } catch (error) {
-    // console.log(error);
-  }
+  const { value, fetch } = useContractCall(
+    contract &&
+      (typeof tokenId === 'number' || typeof tokenId === 'string') && {
+        contract,
+        method: 'ownerOf',
+        args: [tokenId],
+      }
+  );
 
-  const { value, fetch } = useContractCall({
-    contract: erc721Contract,
-    method: 'ownerOf',
-    args: [tokenId],
-  });
-
-  return { owner: value, fetch };
+  return { address: value as string | undefined, fetch };
 };
 
-export const useTokenURI = (address: string, tokenId: string) => {
-  let erc721Contract = useMemo(() => getERC721Contract(constants.AddressZero), []);
+export const useTokenURI = (address: string = '', tokenId: string | number | undefined) => {
+  const contract = useMemo(() => getERC721Contract(address), [address]) ?? undefined;
 
-  try {
-    erc721Contract = getERC721Contract(address);
-  } catch (error) {
-    // console.log(error);
-  }
-
-  const { value, fetch } = useContractCall({
-    contract: erc721Contract,
-    method: 'tokenURI',
-    args: [tokenId],
-  });
+  const { value, fetch } = useContractCall(
+    contract &&
+      (typeof tokenId === 'number' || typeof tokenId === 'string') && {
+        contract,
+        method: 'tokenURI',
+        args: [tokenId],
+      }
+  );
 
   return { uri: value, fetch };
 };

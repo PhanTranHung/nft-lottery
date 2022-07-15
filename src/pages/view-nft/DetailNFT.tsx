@@ -9,9 +9,11 @@ import {
   Center,
   Divider,
   Flex,
+  FormControl,
   Heading,
   HStack,
   Image,
+  Input,
   Link,
   LinkOverlay,
   Text,
@@ -20,9 +22,9 @@ import Countdown, { CountdownRendererFn } from 'react-countdown';
 import ShortString from '../../components/ShortString';
 import { BiCopy, BiLinkExternal } from 'react-icons/bi';
 import { useParams } from 'react-router-dom';
-import { useTokenURI } from '../../contracts/ERC721/hooks';
+import { useOwnerOfNFT, useTokenURI } from '../../contracts/ERC721/hooks';
 import { useMoralis, useMoralisWeb3Api } from 'react-moralis';
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { DEFAULT_CHAIN_NAME } from '../../config';
 import { INFTMetadata } from '../../types';
 import { parseNFTMetadata } from '../../utils/nftMetadata';
@@ -53,6 +55,7 @@ export interface DetailNFTProps {
 
 const DetailNFT: React.FC = () => {
   const [isSending, setSending] = useState(false);
+  const [amountToBuy, setAmountToBuy] = useState('1');
   const { account } = useWeb3React();
   const { poolAddress = '' } = useParams();
   const { Moralis, isWeb3Enabled } = useMoralis();
@@ -70,8 +73,14 @@ const DetailNFT: React.FC = () => {
   const poolOver = usePoolIsOver({ poolAddress: poolAddress });
   const buyTicket = useNFTLotteryPoolContractFunction('buyTickets', { poolAddress });
   const ticketBalance = usePoolTicketBanlance(account, { poolAddress: poolAddress });
+  const nftOwner = useOwnerOfNFT(nftMetadata?.token_address, nftMetadata?.token_id);
 
   const [_, copyToClipboard] = useCopyToClipboard({ timeToClear: 4000 });
+
+  const price = formatEther(ticketPrice.bigPrice);
+  const remaining = (maxToSell.amount ?? 0) - (ticketSold.amount ?? 0) ?? 0;
+  const soldOut = remaining === 0;
+  const isPoolEnded = soldOut || poolOver.isOver || dayjs(endDate.timestamp).isBefore(Date.now());
 
   useEffect(() => {
     if (isWeb3Enabled && NFTPrize.address && NFTPrizeTokenId.tokenId) {
@@ -96,7 +105,19 @@ const DetailNFT: React.FC = () => {
       return (
         <>
           <Box>
-            <Center>Lottery is ended</Center>
+            {isPoolEnded && poolOver.isOver ? (
+              <>
+                <Box>
+                  <Center>The Winner is</Center>
+                  <Center>{nftOwner.address}</Center>
+                </Box>
+              </>
+            ) : (
+              <>
+                <Center fontSize={'20px'}>Lottery is ended</Center>
+                <Center>Waiting for ...</Center>
+              </>
+            )}
           </Box>
         </>
       );
@@ -110,15 +131,11 @@ const DetailNFT: React.FC = () => {
     }
   };
 
-  const price = formatEther(ticketPrice.bigPrice);
-  const remaining = (maxToSell.amount ?? 0) - (ticketSold.amount ?? 0) ?? 0;
-  const soldOut = remaining === 0;
-
   const handleBuyTicket = async () => {
     setSending(true);
     try {
-      const txResult = await buyTicket.send(1, {
-        value: ticketPrice.bigPrice,
+      const txResult = await buyTicket.send(amountToBuy, {
+        value: ticketPrice.bigPrice.mul(amountToBuy),
       });
 
       console.log(txResult);
@@ -130,6 +147,10 @@ const DetailNFT: React.FC = () => {
     }
   };
 
+  const handleAmountToBuyChange = (elm: ChangeEvent<HTMLInputElement>) => {
+    setAmountToBuy(elm.target.value);
+  };
+
   const handleCopyToClipboard = () => {
     copyToClipboard(nftMetadata?.token_address);
   };
@@ -138,12 +159,17 @@ const DetailNFT: React.FC = () => {
     NFTPrize.fetch();
     NFTPrizeTokenId.fetch();
     ticketPrice.fetch();
+    startDate.fetch();
+    minSell.fetch();
+    maxToHold.fetch();
+    poolOver.fetch();
+    ticketBalance.fetch();
     endDate.fetch();
     maxToSell.fetch();
     ticketSold.fetch();
   };
 
-  console.log('data', ticketBalance);
+  console.log('data', nftOwner);
 
   return (
     <>
@@ -226,25 +252,43 @@ const DetailNFT: React.FC = () => {
               <hr className="v-d-divider" />
               <Box className="v-d-metadata-price">
                 <Flex direction="row">
-                  <Box w={'50%'}>
+                  <Box flexGrow={1}>
                     <Text className="v-d-metadata-title">Current price</Text>
                     <Flex direction={'row'} alignItems="center">
                       <Image className="v-d-currency-unit-icon" w="25px" h="25px" src="/assets/icons/icons-eth.svg" />
                       <Text className="v-d-metadata-value">{price}</Text>
                     </Flex>
                     <Box>
-                      {soldOut ? (
+                      {isPoolEnded ? (
                         <Button colorScheme="blue" size="lg">
-                          {poolOver.isOver ? 'This lottery is over' : 'Sold out'}
+                          {soldOut ? 'Sold out' : 'This lottery is over'}
                         </Button>
                       ) : (
-                        <Button onClick={handleBuyTicket} colorScheme="blue" size="lg" disabled={isSending}>
-                          Buy now {ticketBalance.amount ?? 0}/{maxToHold.amount ?? 0} {isSending && <LoadingSVG />}
-                        </Button>
+                        <>
+                          <FormControl display={'flex'} gap={'5px'} alignItems="center">
+                            <Input
+                              value={amountToBuy}
+                              onChange={handleAmountToBuyChange}
+                              name="amount-to-buy"
+                              type="text"
+                              maxWidth={'6.25rem'}
+                            />
+                            <Button
+                              onClick={handleBuyTicket}
+                              colorScheme="blue"
+                              size="lg"
+                              disabled={isSending}
+                              paddingX={'0.3125rem'}
+                              minWidth={'8.125rem'}
+                            >
+                              Buy now {ticketBalance.amount ?? 0}/{maxToHold.amount ?? 0} {isSending && <LoadingSVG />}
+                            </Button>
+                          </FormControl>
+                        </>
                       )}
                     </Box>
                   </Box>
-                  <Box w={'50%'}>
+                  <Box flexGrow={1}>
                     <Text className="v-d-metadata-title">Min sell</Text>
                     <Text className="v-d-metadata-value">{minSell.amount}</Text>
                   </Box>

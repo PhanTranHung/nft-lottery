@@ -24,5 +24,5 @@ export const MagicImage: React.FC<MagicImageProps> = ({
     setImageSrc(fallbackImg);
   };
 
-  return <Image src={imageSrc} onError={handleLoadImageFailure} {...others} />;
+  return <Image className="magic-image" src={imageSrc} onError={handleLoadImageFailure} {...others} />;
 };

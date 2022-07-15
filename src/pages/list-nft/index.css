@@ -26,6 +26,7 @@
   flex-basis: calc(25% - 0.75rem);
   max-width: calc(25% - 0.75rem);
   border: 2px solid #e5e8eb;
+  min-width: 18.75rem;
 }
 
 .l-i-title {
