@@ -18,11 +18,11 @@ export const useERC721ContractFunction = (address: string, methodName: string, o
 };
 
 export const useOwnerOfNFT = (address: string = '', tokenId: string | number | undefined) => {
-  const contract = useMemo(() => getERC721Contract(address), [address]) ?? undefined;
+  const contract = useMemo(() => getERC721Contract(address), [address]);
 
   const { value, fetch } = useContractCall(
     contract &&
-      (typeof tokenId === 'number' || typeof tokenId === 'string') && {
+      tokenId && {
         contract,
         method: 'ownerOf',
         args: [tokenId],
@@ -33,11 +33,11 @@ export const useOwnerOfNFT = (address: string = '', tokenId: string | number | u
 };
 
 export const useTokenURI = (address: string = '', tokenId: string | number | undefined) => {
-  const contract = useMemo(() => getERC721Contract(address), [address]) ?? undefined;
+  const contract = useMemo(() => getERC721Contract(address), [address]);
 
   const { value, fetch } = useContractCall(
     contract &&
-      (typeof tokenId === 'number' || typeof tokenId === 'string') && {
+      tokenId && {
         contract,
         method: 'tokenURI',
         args: [tokenId],

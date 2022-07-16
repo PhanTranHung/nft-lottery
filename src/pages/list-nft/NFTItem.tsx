@@ -3,6 +3,7 @@ import {
   Button,
   Button as CButton,
   ButtonProps,
+  Center,
   Flex,
   Heading,
   HStack,
@@ -23,6 +24,7 @@ import {
   usePoolEndDate,
   usePoolIsOver,
   usePoolMaxTicketsToSell,
+  usePoolStartDate,
   usePoolTicketPrice,
   usePoolTicketSold,
 } from '../../contracts/NFTLotteryPool/hooks';
@@ -31,29 +33,39 @@ import { INFTMetadata } from '../../types';
 import { parseNFTMetadata } from '../../utils/nftMetadata';
 
 export interface NFTItemProps {
-  imageUrl?: string;
   poolInfo: PoolInfo;
   children?: React.ReactNode;
 }
 
-const NFTItem: React.FC<NFTItemProps> = ({ imageUrl = '/assets/images/nft-image-2.png', poolInfo, children }) => {
+const NFTItem: React.FC<NFTItemProps> = ({ poolInfo, children }) => {
   const { poolAddr, nftAddr, seller, tokenId } = poolInfo;
-  const { Moralis, isWeb3Enabled } = useMoralis();
+  const { isWeb3Enabled } = useMoralis();
   const { token } = useMoralisWeb3Api();
 
   const [nftMetadata, setNFTMetadata] = useState<INFTMetadata>();
 
   const ticketPrice = usePoolTicketPrice({ poolAddress: poolAddr });
+  const startDate = usePoolStartDate({ poolAddress: poolAddr });
   const endDate = usePoolEndDate({ poolAddress: poolAddr });
   const maxToSell = usePoolMaxTicketsToSell({ poolAddress: poolAddr });
   const ticketSold = usePoolTicketSold({ poolAddress: poolAddr });
   const poolOver = usePoolIsOver({ poolAddress: poolAddr });
 
-  const price = formatEther(ticketPrice.bigPrice);
-  const remaining = (maxToSell.amount ?? 0) - (ticketSold.amount ?? 0) ?? 0;
-  const soldOut = remaining === 0;
+  const [state, setState] = useState<'Wait' | 'Open' | 'End' | 'Over' | 'None'>('None');
+  const coundownTimestamp =
+    (state === 'Wait' ? startDate.timestamp : state === 'Open' ? endDate.timestamp : 0) ??
+    dayjs().add(1, 'hour').valueOf();
 
-  const isPoolEnded = poolOver.isOver || soldOut || dayjs(endDate.timestamp).isBefore(Date.now());
+  const price = formatEther(ticketPrice.bigPrice);
+
+  useEffect(() => {
+    if (poolOver.isOver) return setState('Over');
+    if (!startDate.timestamp || !endDate.timestamp) return setState('None');
+    if (dayjs(endDate.timestamp).isBefore(startDate.timestamp)) return setState('None');
+    if (dayjs().isBefore(startDate.timestamp)) return setState('Wait');
+    if (dayjs().isAfter(startDate.timestamp) && dayjs().isBefore(endDate.timestamp)) return setState('Open');
+    if (dayjs().isAfter(endDate.timestamp)) return setState('End');
+  }, [startDate.timestamp, endDate.timestamp, poolOver.isOver]);
 
   useEffect(() => {
     if (isWeb3Enabled && nftAddr && tokenId) {
@@ -77,18 +89,32 @@ const NFTItem: React.FC<NFTItemProps> = ({ imageUrl = '/assets/images/nft-image-
       // Render a completed state
       return (
         <>
-          <Box>00:00:00:00</Box>
+          <Box>
+            <Center color={'#8f2424'} fontSize={'23px'}>
+              Lottery is ended
+            </Center>
+          </Box>
         </>
       );
     } else {
       // Render a countdown
       return (
         <Box>
-          {days}:{hours}:{minutes}:{seconds}
+          <Center color={'#2081e2'} fontSize={'23px'}>
+            {state === 'Wait' ? 'Open in ' : undefined}
+            {days}:{hours}:{minutes}:{seconds}
+          </Center>
         </Box>
       );
     }
   };
+
+  const handleCoundownCompelete = () => {
+    if (state === 'Wait') return setState('Open');
+    if (state === 'Open') return setState('End');
+  };
+
+  // console.log('data', coundownTimestamp);
 
   return (
     <>
@@ -103,11 +129,7 @@ const NFTItem: React.FC<NFTItemProps> = ({ imageUrl = '/assets/images/nft-image-
                 {nftMetadata?.name}
               </Heading>
               <Box fontWeight={700} marginTop="0.5rem">
-                <Countdown
-                  date={endDate.timestamp ?? dayjs().add(1, 'day').toDate()}
-                  renderer={coundownRenderer}
-                  autoStart
-                />
+                <Countdown date={endDate.timestamp} renderer={coundownRenderer} onComplete={handleCoundownCompelete} />
               </Box>
               <HStack>
                 <Text className="l-i-metada-title">Sold:</Text>
@@ -118,12 +140,12 @@ const NFTItem: React.FC<NFTItemProps> = ({ imageUrl = '/assets/images/nft-image-
               <HStack>
                 <Text className="l-i-metada-title">Price:</Text>
                 <Text>{price}</Text>
-                <Image className="v-d-currency-unit-icon" w="25px" h="25px" src="/assets/icons/icons-eth.svg" />
+                <Image className="v-d-currency-unit-icon" w="20px" h="20px" src="/assets/icons/icons-bsc.svg" />
               </HStack>
             </Flex>
             <Link to={`/view-lottery/${poolAddr}`}>
               <Button className="l-i-button" colorScheme={'blue'}>
-                {isPoolEnded ? 'View Detail' : 'Buy now'}
+                {state !== 'Open' ? 'View Detail' : 'Buy now'}
               </Button>
             </Link>
           </Box>

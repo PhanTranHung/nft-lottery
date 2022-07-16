@@ -114,11 +114,13 @@
   border: 2px solid #e5e8eb;
   border-radius: 0.5rem;
   margin-top: 1rem;
+  padding: 1rem;
 }
 
 .v-d-coundown {
   font-size: 2.625rem;
   font-weight: 700;
+  padding: 1rem;
 }
 .v-d- {
 }

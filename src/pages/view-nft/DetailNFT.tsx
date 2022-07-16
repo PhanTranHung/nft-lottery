@@ -10,6 +10,7 @@ import {
   Divider,
   Flex,
   FormControl,
+  Grid,
   Heading,
   HStack,
   Image,
@@ -38,6 +39,7 @@ import {
   usePoolMinTicketsToSell,
   usePoolNFTPrize,
   usePoolNFTPrizeTokenId,
+  usePoolOwner,
   usePoolStartDate,
   usePoolTicketBanlance,
   usePoolTicketPrice,
@@ -55,6 +57,8 @@ export interface DetailNFTProps {
 
 const DetailNFT: React.FC = () => {
   const [isSending, setSending] = useState(false);
+  const [isDrawingLottery, setDrawingLottery] = useState(false);
+  const [isRefundingAsset, setRefundingAsset] = useState(false);
   const [amountToBuy, setAmountToBuy] = useState('1');
   const { account } = useWeb3React();
   const { poolAddress = '' } = useParams();
@@ -71,16 +75,32 @@ const DetailNFT: React.FC = () => {
   const maxToHold = usePoolMaxTicketsToHold({ poolAddress: poolAddress });
   const ticketSold = usePoolTicketSold({ poolAddress: poolAddress });
   const poolOver = usePoolIsOver({ poolAddress: poolAddress });
-  const buyTicket = useNFTLotteryPoolContractFunction('buyTickets', { poolAddress });
+  const poolOwner = usePoolOwner({ poolAddress: poolAddress });
   const ticketBalance = usePoolTicketBanlance(account, { poolAddress: poolAddress });
-  const nftOwner = useOwnerOfNFT(nftMetadata?.token_address, nftMetadata?.token_id);
+  const nftOwner = useOwnerOfNFT(NFTPrize.address, NFTPrizeTokenId.tokenId);
+  const buyTickets = useNFTLotteryPoolContractFunction('buyTickets', { poolAddress });
+  const distributePrize = useNFTLotteryPoolContractFunction('distributePrize', { poolAddress });
+  const refundOwnerAssets = useNFTLotteryPoolContractFunction('refundOwnerAssets', { poolAddress });
+
+  const [state, setState] = useState<'Wait' | 'Open' | 'End' | 'Over' | 'None'>('None');
+  const coundownTimestamp = (state === 'Wait' ? startDate.timestamp : state === 'Open' ? endDate.timestamp : 0) ?? 0;
 
   const [_, copyToClipboard] = useCopyToClipboard({ timeToClear: 4000 });
 
   const price = formatEther(ticketPrice.bigPrice);
   const remaining = (maxToSell.amount ?? 0) - (ticketSold.amount ?? 0) ?? 0;
   const soldOut = remaining === 0;
-  const isPoolEnded = soldOut || poolOver.isOver || dayjs(endDate.timestamp).isBefore(Date.now());
+  const isPoolOwner = account === poolOwner.address;
+  const isDrawable = (ticketSold.amount ?? 0) >= (minSell.amount ?? 0);
+
+  useEffect(() => {
+    if (poolOver.isOver) return setState('Over');
+    if (!startDate.timestamp || !endDate.timestamp) return setState('None');
+    if (dayjs(endDate.timestamp).isBefore(startDate.timestamp)) return setState('None');
+    if (dayjs().isBefore(startDate.timestamp)) return setState('Wait');
+    if (dayjs().isAfter(startDate.timestamp) && dayjs().isBefore(endDate.timestamp)) return setState('Open');
+    if (dayjs().isAfter(endDate.timestamp)) return setState('End');
+  }, [startDate.timestamp, endDate.timestamp, poolOver.isOver]);
 
   useEffect(() => {
     if (isWeb3Enabled && NFTPrize.address && NFTPrizeTokenId.tokenId) {
@@ -98,43 +118,37 @@ const DetailNFT: React.FC = () => {
     }
   }, [isWeb3Enabled, token, NFTPrize.address, NFTPrizeTokenId.tokenId]);
 
+  // useEffect(() => {
+  //   setIsEndTime(dayjs(endDate.timestamp).isBefore(Date.now()));
+  // }, [endDate.timestamp]);
+
+  // useEffect(() => {
+  //   setPoolOpen(dayjs(startDate.timestamp).isBefore(Date.now()));
+  // }, [startDate.timestamp]);
+
   // Renderer callback with condition
-  const coundownRenderer: CountdownRendererFn = ({ completed, formatted: { days, hours, minutes, seconds } }) => {
-    if (completed) {
-      // Render a completed state
-      return (
-        <>
-          <Box>
-            {isPoolEnded && poolOver.isOver ? (
-              <>
-                <Box>
-                  <Center>The Winner is</Center>
-                  <Center>{nftOwner.address}</Center>
-                </Box>
-              </>
-            ) : (
-              <>
-                <Center fontSize={'20px'}>Lottery is ended</Center>
-                <Center>Waiting for ...</Center>
-              </>
-            )}
-          </Box>
-        </>
-      );
-    } else {
-      // Render a countdown
-      return (
-        <Box>
-          {days}:{hours}:{minutes}:{seconds}
-        </Box>
-      );
-    }
+  const coundownRenderer: CountdownRendererFn = ({
+    completed,
+    days: daysNumber,
+    formatted: { days, hours, minutes, seconds },
+  }) => {
+    return (
+      <Box>
+        {state === 'Wait' ? 'Open in ' : undefined}
+        {daysNumber ? `${days} Days ` : undefined} {hours}:{minutes}:{seconds}
+      </Box>
+    );
+  };
+
+  const handleCoundownCompelete = () => {
+    if (state === 'Wait') return setState('Open');
+    if (state === 'Open') return setState('End');
   };
 
   const handleBuyTicket = async () => {
     setSending(true);
     try {
-      const txResult = await buyTicket.send(amountToBuy, {
+      const txResult = await buyTickets.send(amountToBuy, {
         value: ticketPrice.bigPrice.mul(amountToBuy),
       });
 
@@ -149,6 +163,32 @@ const DetailNFT: React.FC = () => {
 
   const handleAmountToBuyChange = (elm: ChangeEvent<HTMLInputElement>) => {
     setAmountToBuy(elm.target.value);
+  };
+
+  const handleDrawLottery = async () => {
+    setDrawingLottery(true);
+    try {
+      const txResult = await distributePrize.send();
+      console.log(txResult);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setDrawingLottery(false);
+      refetchAll();
+    }
+  };
+
+  const handleRefundOwnerAssets = async () => {
+    setRefundingAsset(true);
+    try {
+      const txResult = await refundOwnerAssets.send();
+      console.log(txResult);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setRefundingAsset(false);
+      refetchAll();
+    }
   };
 
   const handleCopyToClipboard = () => {
@@ -167,8 +207,11 @@ const DetailNFT: React.FC = () => {
     endDate.fetch();
     maxToSell.fetch();
     ticketSold.fetch();
+    nftOwner.fetch();
+    poolOwner.fetch();
   };
 
+  // console.log('data', 'start date', startDate.timestamp, 'end date', endDate.timestamp);
   console.log('data', nftOwner);
 
   return (
@@ -203,12 +246,18 @@ const DetailNFT: React.FC = () => {
                   </AccordionButton>
                 </h2>
                 <AccordionPanel pb={4} fontSize={'12px'}>
-                  <Text className="v-d-metadata-title">
+                  <Box className="v-d-metadata-title">
                     From: <b>{dayjs(startDate.timestamp).format('DD/MM/YYYY HH:mm:ss')}</b>
-                  </Text>
-                  <Text className="v-d-metadata-title">
+                  </Box>
+                  <Box className="v-d-metadata-title">
                     To: <b>{dayjs(endDate.timestamp).format('DD/MM/YYYY HH:mm:ss')}</b>
-                  </Text>
+                  </Box>
+                  <Box whiteSpace={'normal'} className="v-d-metadata-title">
+                    Seller:{' '}
+                    <b>
+                      <ShortString str={poolOwner.address} />
+                    </b>
+                  </Box>
                 </AccordionPanel>
               </AccordionItem>
             </Accordion>
@@ -218,23 +267,55 @@ const DetailNFT: React.FC = () => {
           <Flex direction={'column'}>
             <Box>
               <Heading as="h2" color="blue.400">
-                {nftMetadata?.name} #{nftMetadata?.token_id}
+                {nftMetadata?.name} #{NFTPrizeTokenId.tokenId}
               </Heading>
               <Box onClick={handleCopyToClipboard} className="v-d-box-little-text">
                 <HStack>
-                  <ShortString str={nftMetadata?.token_address} />
+                  <ShortString str={NFTPrize.address} />
                   <BiCopy />
                 </HStack>
               </Box>
             </Box>
             <Box className="v-d-coundown-container ">
               <Center className="v-d-coundown">
-                {endDate.timestamp ? (
-                  <Countdown date={endDate.timestamp} renderer={coundownRenderer} />
+                {poolOver.isOver ? (
+                  <Box>
+                    <Center>The Winner is</Center>
+                    <Center fontSize={'14px'}>{nftOwner.address}</Center>
+                  </Box>
+                ) : state === 'None' ? (
+                  <Box>--:--:--:--</Box>
+                ) : state === 'Wait' || state === 'Open' ? (
+                  <Countdown
+                    date={coundownTimestamp}
+                    renderer={coundownRenderer}
+                    onComplete={handleCoundownCompelete}
+                  />
                 ) : (
-                  <>
-                    <Box>--:--:--:--</Box>
-                  </>
+                  <Box>
+                    <Center fontSize={'20px'}>Time is ended</Center>
+
+                    {isDrawable ? (
+                      <Center>Waiting for draw</Center>
+                    ) : (
+                      <>
+                        <Center>Can't draw</Center>
+                        <Center fontSize={'20px'}>Not enough ticket to draw</Center>
+                      </>
+                    )}
+                  </Box>
+                )}
+              </Center>
+              <Center>
+                {isPoolOwner && state === 'End' && (
+                  <Grid gridTemplateColumns={'repeat(2, minmax(190px, 230px ))'} gridGap={'1rem'} width="fit-content">
+                    <Button colorScheme="blue" size="lg" onClick={handleDrawLottery} disabled={isDrawingLottery}>
+                      Draw the Lottery {isDrawingLottery && <LoadingSVG />}
+                    </Button>
+                    <Button colorScheme="blue" size="lg" onClick={handleRefundOwnerAssets} disabled={isRefundingAsset}>
+                      Refund asset {isRefundingAsset && <LoadingSVG />}
+                    </Button>
+                  </Grid>
                 )}
               </Center>
             </Box>
@@ -255,13 +336,23 @@ const DetailNFT: React.FC = () => {
                   <Box flexGrow={1}>
                     <Text className="v-d-metadata-title">Current price</Text>
                     <Flex direction={'row'} alignItems="center">
-                      <Image className="v-d-currency-unit-icon" w="25px" h="25px" src="/assets/icons/icons-eth.svg" />
-                      <Text className="v-d-metadata-value">{price}</Text>
+                      <Image className="v-d-currency-unit-icon" w="25px" h="25px" src="/assets/icons/icons-bsc.svg" />
+                      <Text pl={'0.5rem'} className="v-d-metadata-value">
+                        {price}
+                      </Text>
                     </Flex>
                     <Box>
-                      {isPoolEnded ? (
+                      {state !== 'Open' ? (
                         <Button colorScheme="blue" size="lg">
-                          {soldOut ? 'Sold out' : 'This lottery is over'}
+                          {state === 'Wait'
+                            ? 'Please wait.'
+                            : state === 'End'
+                            ? 'Time ended'
+                            : state === 'Over'
+                            ? 'Lottery is over'
+                            : soldOut
+                            ? 'Sold out'
+                            : undefined}
                         </Button>
                       ) : (
                         <>

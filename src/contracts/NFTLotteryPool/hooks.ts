@@ -66,7 +66,7 @@ export const usePoolStartDate = ({ poolAddress = '', fallback = false }: Options
     }
   );
 
-  return { timestamp: value?.toNumber?.() as number | undefined, fetch };
+  return { timestamp: (value as BigNumber | undefined)?.mul(1000)?.toNumber?.(), fetch };
 };
 
 export const usePoolEndDate = ({ poolAddress = '', fallback = false }: Options) => {
@@ -82,7 +82,7 @@ export const usePoolEndDate = ({ poolAddress = '', fallback = false }: Options) 
     }
   );
 
-  return { timestamp: value?.toNumber?.() as number | undefined, fetch };
+  return { timestamp: (value as BigNumber | undefined)?.mul(1000)?.toNumber?.(), fetch };
 };
 
 export const usePoolMinTicketsToSell = ({ poolAddress = '', fallback = false }: Options) => {
@@ -215,4 +215,20 @@ export const usePoolIsOver = ({ poolAddress = '', fallback = false }: Options) =
   );
 
   return { isOver: value as boolean | undefined, fetch };
+};
+
+export const usePoolOwner = ({ poolAddress = '', fallback = false }: Options) => {
+  const contract =
+    useMemo(() => getNFTLotteryPoolContract(poolAddress), [poolAddress]) ??
+    (fallback ? NFTLotteryPoolContract : undefined);
+
+  const { value, fetch } = useContractCall(
+    contract && {
+      contract: contract,
+      method: 'owner',
+      args: [],
+    }
+  );
+
+  return { address: value as string | undefined, fetch };
 };

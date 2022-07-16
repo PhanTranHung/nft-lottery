@@ -126,9 +126,11 @@ export const useContractCall = <T = any>(
   if (!call) call = undefined;
   if (call && !call.args) call.args = [];
 
+  console.log('call');
+
   useEffect(() => {
     handleFetchData();
-  }, [provider]);
+  }, [provider, call?.method]); // fix me
 
   const handleFetchData = useCallback(
     async (...params: any[]): Promise<T | undefined> => {
@@ -149,7 +151,7 @@ export const useContractCall = <T = any>(
       }
     },
     //@ts-ignore
-    [provider, call?.contract, call?.method]
+    [provider, call?.contract, call?.method, call?.args]
   );
   return { value, fetch: handleFetchData };
 };
