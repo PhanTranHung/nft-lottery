@@ -126,8 +126,6 @@ export const useContractCall = <T = any>(
   if (!call) call = undefined;
   if (call && !call.args) call.args = [];
 
-  console.log('call');
-
   useEffect(() => {
     handleFetchData();
   }, [provider, call?.method]); // fix me
