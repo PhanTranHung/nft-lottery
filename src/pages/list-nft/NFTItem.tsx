@@ -85,36 +85,20 @@ const NFTItem: React.FC<NFTItemProps> = ({ poolInfo, children }) => {
 
   // Renderer callback with condition
   const coundownRenderer: CountdownRendererFn = ({ completed, formatted: { days, hours, minutes, seconds } }) => {
-    if (completed) {
-      // Render a completed state
-      return (
-        <>
-          <Box>
-            <Center color={'#8f2424'} fontSize={'23px'}>
-              Lottery is ended
-            </Center>
-          </Box>
-        </>
-      );
-    } else {
-      // Render a countdown
-      return (
-        <Box>
-          <Center color={'#2081e2'} fontSize={'23px'}>
-            {state === 'Wait' ? 'Open in ' : undefined}
-            {days}:{hours}:{minutes}:{seconds}
-          </Center>
-        </Box>
-      );
-    }
+    return (
+      <Box>
+        <Center color={'#2081e2'} fontSize={'23px'}>
+          {state === 'Wait' ? 'Open in ' : undefined}
+          {days}:{hours}:{minutes}:{seconds}
+        </Center>
+      </Box>
+    );
   };
 
   const handleCoundownCompelete = () => {
     if (state === 'Wait') return setState('Open');
     if (state === 'Open') return setState('End');
   };
-
-  // console.log('data', coundownTimestamp);
 
   return (
     <>
@@ -129,7 +113,19 @@ const NFTItem: React.FC<NFTItemProps> = ({ poolInfo, children }) => {
                 {nftMetadata?.name}
               </Heading>
               <Box fontWeight={700} marginTop="0.5rem">
-                <Countdown date={endDate.timestamp} renderer={coundownRenderer} onComplete={handleCoundownCompelete} />
+                {state === 'Wait' || state === 'Open' ? (
+                  <Countdown
+                    date={coundownTimestamp}
+                    renderer={coundownRenderer}
+                    onComplete={handleCoundownCompelete}
+                  />
+                ) : (
+                  <Box>
+                    <Center color={'#8f2424'} fontSize={'23px'}>
+                      Lottery is ended
+                    </Center>
+                  </Box>
+                )}
               </Box>
               <HStack>
                 <Text className="l-i-metada-title">Sold:</Text>
