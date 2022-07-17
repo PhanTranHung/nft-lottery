@@ -14,7 +14,7 @@ const BrowseNFT: React.FC<BrowseNFTProps> = ({ children }) => {
 
   return (
     <>
-      <Box className="l-b-nft-wrapper">
+      <Box className="l-b-nft-wrapper" minHeight={'400px'}>
         <Flex className="l-b-wrap-box" flexWrap={'wrap'}>
           {allPool.map((pool) => (
             <NFTItem key={pool.poolAddr} poolInfo={pool} />

@@ -62,7 +62,6 @@ const DetailNFT: React.FC = () => {
   const [isWithdrawing, setWithdrawing] = useState(false);
   const [isClaiming, setClaiming] = useState(false);
   const [amountToBuy, setAmountToBuy] = useState('1');
-  const [amountToWithdraw, setAmountToWithdraw] = useState('1');
   const { account } = useWeb3React();
   const { poolAddress = '' } = useParams();
   const { Moralis, isWeb3Enabled } = useMoralis();
@@ -162,10 +161,6 @@ const DetailNFT: React.FC = () => {
     setAmountToBuy(elm.target.value);
   };
 
-  const handleAmountToWithdrawChange = (elm: ChangeEvent<HTMLInputElement>) => {
-    setAmountToWithdraw(elm.target.value);
-  };
-
   const handleDrawLottery = async () => {
     setDrawingLottery(true);
     try {
@@ -193,10 +188,9 @@ const DetailNFT: React.FC = () => {
   };
 
   const handleGetRefund = async () => {
-    const amount = amountToWithdraw.trim();
     setWithdrawing(true);
     try {
-      const txResult = await getRefund.send(amount);
+      const txResult = await getRefund.send();
       console.log(txResult);
     } catch (error) {
       console.error(error);
@@ -335,12 +329,12 @@ const DetailNFT: React.FC = () => {
                 )}
               </Center>
               <Center>
-                {state === 'End' && (
+                {(state === 'End' || state === 'Over') && (
                   <>
                     <Grid gridTemplateColumns={'repeat(2, minmax(190px, 230px ))'} gridGap={'1rem'} width="fit-content">
                       {isPoolOwner && (
                         <>
-                          {isDrawable && (
+                          {isDrawable && !(state === 'Over') && (
                             <>
                               <Button
                                 colorScheme="blue"
@@ -353,7 +347,7 @@ const DetailNFT: React.FC = () => {
                             </>
                           )}
 
-                          {poolOver.isOver && (
+                          {state === 'Over' && (
                             <Button colorScheme="blue" size="lg" onClick={handleClaimToken} disabled={isClaiming}>
                               Claim BSC {isClaiming && <LoadingSVG />}
                             </Button>
@@ -403,20 +397,10 @@ const DetailNFT: React.FC = () => {
                         <>
                           {state === 'End' && (ticketBalance.amount ?? 0) > 0 ? (
                             <>
-                              <FormControl display={'flex'} gap={'5px'} alignItems="center">
-                                <Input
-                                  value={amountToWithdraw}
-                                  onChange={handleAmountToWithdrawChange}
-                                  name="amount-to-buy"
-                                  type="text"
-                                  maxWidth={'6.25rem'}
-                                  disabled={isWithdrawing}
-                                />
-                                <Button colorScheme="blue" size="lg" onClick={handleGetRefund} disabled={isClaiming}>
-                                  Get Refund {ticketBalance.amount ?? 0}/{maxToHold.amount ?? 0}{' '}
-                                  {isWithdrawing && <LoadingSVG />}
-                                </Button>
-                              </FormControl>
+                              <Button colorScheme="blue" size="lg" onClick={handleGetRefund} disabled={isClaiming}>
+                                Get Refund {ticketBalance.amount ?? 0}/{maxToHold.amount ?? 0}{' '}
+                                {isWithdrawing && <LoadingSVG />}
+                              </Button>
                             </>
                           ) : (
                             <Button colorScheme="blue" size="lg">
