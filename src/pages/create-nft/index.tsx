@@ -18,9 +18,6 @@ const CreateNFT: React.FC = () => {
     setTokenId(elm.target.value);
   };
 
-  const a = useOwnerOfNFT('0x1449a44476Bb773934f4A6397d3e7971c90Fab90', '3');
-  console.log(a);
-
   return (
     <>
       <Box paddingY="3rem">

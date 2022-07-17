@@ -59,7 +59,10 @@ const DetailNFT: React.FC = () => {
   const [isSending, setSending] = useState(false);
   const [isDrawingLottery, setDrawingLottery] = useState(false);
   const [isRefundingAsset, setRefundingAsset] = useState(false);
+  const [isWithdrawing, setWithdrawing] = useState(false);
+  const [isClaiming, setClaiming] = useState(false);
   const [amountToBuy, setAmountToBuy] = useState('1');
+  const [amountToWithdraw, setAmountToWithdraw] = useState('1');
   const { account } = useWeb3React();
   const { poolAddress = '' } = useParams();
   const { Moralis, isWeb3Enabled } = useMoralis();
@@ -81,6 +84,8 @@ const DetailNFT: React.FC = () => {
   const buyTickets = useNFTLotteryPoolContractFunction('buyTickets', { poolAddress });
   const distributePrize = useNFTLotteryPoolContractFunction('distributePrize', { poolAddress });
   const refundOwnerAssets = useNFTLotteryPoolContractFunction('refundOwnerAssets', { poolAddress });
+  const getRefund = useNFTLotteryPoolContractFunction('getRefund', { poolAddress });
+  const claimToken = useNFTLotteryPoolContractFunction('claimETH', { poolAddress });
 
   const [state, setState] = useState<'Wait' | 'Open' | 'End' | 'Over' | 'None'>('None');
   const coundownTimestamp = (state === 'Wait' ? startDate.timestamp : state === 'Open' ? endDate.timestamp : 0) ?? 0;
@@ -92,6 +97,7 @@ const DetailNFT: React.FC = () => {
   const soldOut = remaining === 0;
   const isPoolOwner = account === poolOwner.address;
   const isDrawable = (ticketSold.amount ?? 0) >= (minSell.amount ?? 0);
+  const isNotRefundedNFTYet = nftOwner.address === poolAddress;
 
   useEffect(() => {
     if (poolOver.isOver) return setState('Over');
@@ -118,15 +124,6 @@ const DetailNFT: React.FC = () => {
     }
   }, [isWeb3Enabled, token, NFTPrize.address, NFTPrizeTokenId.tokenId]);
 
-  // useEffect(() => {
-  //   setIsEndTime(dayjs(endDate.timestamp).isBefore(Date.now()));
-  // }, [endDate.timestamp]);
-
-  // useEffect(() => {
-  //   setPoolOpen(dayjs(startDate.timestamp).isBefore(Date.now()));
-  // }, [startDate.timestamp]);
-
-  // Renderer callback with condition
   const coundownRenderer: CountdownRendererFn = ({
     completed,
     days: daysNumber,
@@ -165,6 +162,10 @@ const DetailNFT: React.FC = () => {
     setAmountToBuy(elm.target.value);
   };
 
+  const handleAmountToWithdrawChange = (elm: ChangeEvent<HTMLInputElement>) => {
+    setAmountToWithdraw(elm.target.value);
+  };
+
   const handleDrawLottery = async () => {
     setDrawingLottery(true);
     try {
@@ -191,6 +192,33 @@ const DetailNFT: React.FC = () => {
     }
   };
 
+  const handleGetRefund = async () => {
+    const amount = amountToWithdraw.trim();
+    setWithdrawing(true);
+    try {
+      const txResult = await getRefund.send(amount);
+      console.log(txResult);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setWithdrawing(false);
+      refetchAll();
+    }
+  };
+
+  const handleClaimToken = async () => {
+    setClaiming(true);
+    try {
+      const txResult = await claimToken.send();
+      console.log(txResult);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setClaiming(false);
+      refetchAll();
+    }
+  };
+
   const handleCopyToClipboard = () => {
     copyToClipboard(nftMetadata?.token_address);
   };
@@ -212,7 +240,7 @@ const DetailNFT: React.FC = () => {
   };
 
   // console.log('data', 'start date', startDate.timestamp, 'end date', endDate.timestamp);
-  console.log('data', nftOwner);
+  // console.log('data', nftOwner);
 
   return (
     <>
@@ -307,15 +335,44 @@ const DetailNFT: React.FC = () => {
                 )}
               </Center>
               <Center>
-                {isPoolOwner && state === 'End' && (
-                  <Grid gridTemplateColumns={'repeat(2, minmax(190px, 230px ))'} gridGap={'1rem'} width="fit-content">
-                    <Button colorScheme="blue" size="lg" onClick={handleDrawLottery} disabled={isDrawingLottery}>
-                      Draw the Lottery {isDrawingLottery && <LoadingSVG />}
-                    </Button>
-                    <Button colorScheme="blue" size="lg" onClick={handleRefundOwnerAssets} disabled={isRefundingAsset}>
-                      Refund asset {isRefundingAsset && <LoadingSVG />}
-                    </Button>
-                  </Grid>
+                {state === 'End' && (
+                  <>
+                    <Grid gridTemplateColumns={'repeat(2, minmax(190px, 230px ))'} gridGap={'1rem'} width="fit-content">
+                      {isPoolOwner && (
+                        <>
+                          {isDrawable && (
+                            <>
+                              <Button
+                                colorScheme="blue"
+                                size="lg"
+                                onClick={handleDrawLottery}
+                                disabled={isDrawingLottery}
+                              >
+                                Draw the Lottery {isDrawingLottery && <LoadingSVG />}
+                              </Button>
+                            </>
+                          )}
+
+                          {poolOver.isOver && (
+                            <Button colorScheme="blue" size="lg" onClick={handleClaimToken} disabled={isClaiming}>
+                              Claim BSC {isClaiming && <LoadingSVG />}
+                            </Button>
+                          )}
+
+                          {isNotRefundedNFTYet && !isDrawable && (
+                            <Button
+                              colorScheme="blue"
+                              size="lg"
+                              onClick={handleRefundOwnerAssets}
+                              disabled={isRefundingAsset}
+                            >
+                              Refund asset {isRefundingAsset && <LoadingSVG />}
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </Grid>
+                  </>
                 )}
               </Center>
             </Box>
@@ -343,17 +400,39 @@ const DetailNFT: React.FC = () => {
                     </Flex>
                     <Box>
                       {state !== 'Open' ? (
-                        <Button colorScheme="blue" size="lg">
-                          {state === 'Wait'
-                            ? 'Please wait.'
-                            : state === 'End'
-                            ? 'Time ended'
-                            : state === 'Over'
-                            ? 'Lottery is over'
-                            : soldOut
-                            ? 'Sold out'
-                            : undefined}
-                        </Button>
+                        <>
+                          {state === 'End' && (ticketBalance.amount ?? 0) > 0 ? (
+                            <>
+                              <FormControl display={'flex'} gap={'5px'} alignItems="center">
+                                <Input
+                                  value={amountToWithdraw}
+                                  onChange={handleAmountToWithdrawChange}
+                                  name="amount-to-buy"
+                                  type="text"
+                                  maxWidth={'6.25rem'}
+                                  disabled={isWithdrawing}
+                                />
+                                <Button colorScheme="blue" size="lg" onClick={handleGetRefund} disabled={isClaiming}>
+                                  Get Refund {ticketBalance.amount ?? 0}/{maxToHold.amount ?? 0}{' '}
+                                  {isWithdrawing && <LoadingSVG />}
+                                </Button>
+                              </FormControl>
+                            </>
+                          ) : (
+                            <Button colorScheme="blue" size="lg">
+                              {state === 'Wait'
+                                ? 'Please wait.'
+                                : state === 'End'
+                                ? `Time ended`
+                                : state === 'Over'
+                                ? 'Lottery is over'
+                                : soldOut
+                                ? 'Sold out'
+                                : undefined}{' '}
+                              {ticketBalance.amount ?? 0}/{maxToHold.amount ?? 0}
+                            </Button>
+                          )}
+                        </>
                       ) : (
                         <>
                           <FormControl display={'flex'} gap={'5px'} alignItems="center">
