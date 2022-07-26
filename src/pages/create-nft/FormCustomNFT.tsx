@@ -1,30 +1,85 @@
-import { Box, FormControl, Heading, Text } from '@chakra-ui/react';
-import { BigNumber } from 'ethers';
+import {
+  Box,
+  FormControl,
+  FormHelperText,
+  FormLabel,
+  Heading,
+  Input as CInput,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Popover,
+  PopoverArrow,
+  PopoverContent,
+  PopoverTrigger,
+  Text,
+  useDisclosure,
+} from '@chakra-ui/react';
 import { parseEther, parseUnits } from 'ethers/lib/utils';
 import React, { ChangeEvent, useState } from 'react';
 import { LoadingSVG } from '../../assets/Loading';
 import Button from '../../components/Button';
 import Container from '../../components/Container';
-import Input from '../../components/Input';
 import { useNFTLotteryPoolFunction } from '../../contracts/NFTLottetyPoolFactory/hooks';
+import { DateRange, Calendar } from 'react-date-range';
+import dayjs from 'dayjs';
+import TimePicker from 'rc-time-picker';
+import { FaRegCalendarAlt } from 'react-icons/fa';
+import Input from '../../components/Input';
+import moment, { Moment } from 'moment';
 
-const FormCustomNFT: React.FC<{ nftAddress: string; tokenId: string }> = ({ nftAddress, tokenId }) => {
+import 'react-date-range/dist/styles.css'; // main css file
+import 'react-date-range/dist/theme/default.css'; // theme css file
+import 'rc-time-picker/assets/index.css';
+
+const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } }> = ({ selected }) => {
   const [isSending, setSending] = useState(false);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startTime, setStartTime] = useState(new Date(0));
+  const [endTime, setEndTime] = useState(new Date(0));
   const [minSell, setMinSell] = useState('');
   const [maxSell, setMaxSell] = useState('');
   const [maxHold, setMaxHold] = useState('');
   const [price, setPrice] = useState('');
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: isOpenStartTimePicker,
+    onOpen: onOpenStartTimePicker,
+    onClose: onCloseStartTimePicker,
+  } = useDisclosure();
+  const { isOpen: isOpenEndTimePicker, onOpen: onOpenEndTimePicker, onClose: onCloseEndTimePicker } = useDisclosure();
+
+  const [state, setState] = useState([
+    {
+      startDate: dayjs().toDate(),
+      endDate: dayjs().add(7, 'days').toDate(),
+      key: 'selection',
+    },
+  ]);
+
+  console.log(state);
 
   const createNFTLotteryPool = useNFTLotteryPoolFunction('createNFTLotteryPool');
 
-  const handleStartDateChange = (elm: ChangeEvent<HTMLInputElement>) => {
-    setStartDate(elm.target.value);
+  const handleStartTimeChange = (time: Moment) => {
+    setStartTime(time.toDate());
   };
-  const handleEndDateChange = (elm: ChangeEvent<HTMLInputElement>) => {
-    setEndDate(elm.target.value);
+  const handleEndTimeChange = (time: Moment) => {
+    setEndTime(time.toDate());
   };
+
+  const handleStartDateChange = (date: Date) => {
+    state[0].startDate = date;
+    setState([...state]);
+  };
+  const handleEndDateChange = (date: Date) => {
+    state[0].endDate = date;
+    setState([...state]);
+  };
+
   const handleMinSellChange = (elm: ChangeEvent<HTMLInputElement>) => {
     setMinSell(elm.target.value);
   };
@@ -38,17 +93,18 @@ const FormCustomNFT: React.FC<{ nftAddress: string; tokenId: string }> = ({ nftA
     setPrice(elm.target.value);
   };
   const handleCreateLottery = async () => {
-    console.log(startDate, endDate, minSell, maxSell, maxHold, price);
-
+    console.log(startTime, endTime, minSell, maxSell, maxHold, price);
+    if (!selected) return;
+    const { address, tokenId } = selected;
     const bigPrice = parseUnits(price ?? '0');
 
     try {
       setSending(true);
       const txResult = await createNFTLotteryPool.send(
-        nftAddress,
+        address,
         tokenId,
-        startDate,
-        endDate,
+        startTime,
+        endTime,
         minSell,
         maxSell,
         maxHold,
@@ -83,16 +139,108 @@ const FormCustomNFT: React.FC<{ nftAddress: string; tokenId: string }> = ({ nftA
             <Box paddingTop={'0.5rem'}>
               <FormControl>
                 <Box>
-                  <Input
-                    value={startDate}
-                    onChange={handleStartDateChange}
-                    name="start-date"
-                    label="Start Date"
-                    type="text"
-                  />
-                </Box>
-                <Box>
-                  <Input value={endDate} onChange={handleEndDateChange} name="end-date" label="End Date" type="text" />
+                  <Box>
+                    <FormLabel htmlFor="start-date">Start Date</FormLabel>
+                    <Box display="flex" gap="1rem">
+                      <Popover>
+                        <PopoverTrigger>
+                          <CInput
+                            value={dayjs(state[0].startDate).format('DD/MM/YYYY')}
+                            // onClick={onOpen}
+                            name="start-date"
+                            type="text"
+                            autoComplete="off"
+                            w="150px"
+                          />
+                        </PopoverTrigger>
+                        <PopoverContent w="auto">
+                          <Box>
+                            <Calendar onChange={handleStartDateChange} date={state[0].startDate} minDate={new Date()} />
+                          </Box>
+                        </PopoverContent>
+                      </Popover>
+
+                      <Box pos="relative">
+                        <CInput
+                          value={dayjs(startTime).format('HH:mm:ss')}
+                          onClick={onOpenStartTimePicker}
+                          name="start-time"
+                          type="text"
+                          autoComplete="off"
+                          w="150px"
+                        />
+                        <Box pos="absolute" bottom="0" left="0">
+                          <TimePicker
+                            defaultValue={moment(startTime)}
+                            onChange={handleStartTimeChange}
+                            open={isOpenStartTimePicker}
+                            onClose={onCloseStartTimePicker}
+                            onOpen={onOpenStartTimePicker}
+                            format={'HH:mm:ss'}
+                            inputReadOnly
+                          />
+                        </Box>
+                      </Box>
+
+                      <Button colorScheme="gray" variant="outline" onClick={onOpen}>
+                        <FaRegCalendarAlt />
+                      </Button>
+                    </Box>
+                    <FormHelperText></FormHelperText>
+                  </Box>
+                  <Box>
+                    <FormLabel htmlFor="end-date">End Date</FormLabel>
+                    <Box display="flex" gap="1rem">
+                      <Popover>
+                        <PopoverTrigger>
+                          <CInput
+                            value={dayjs(state[0].endDate).format('DD/MM/YYYY')}
+                            name="end-date"
+                            type="text"
+                            autoComplete="off"
+                            // onClick={onOpen}
+                            w="150px"
+                          />
+                        </PopoverTrigger>
+                        <PopoverContent w="auto">
+                          <Box>
+                            <Calendar
+                              onChange={handleEndDateChange}
+                              date={state[0].endDate}
+                              minDate={state[0].startDate}
+                            />
+                          </Box>
+                        </PopoverContent>
+                      </Popover>
+
+                      <Box pos="relative">
+                        <CInput
+                          value={dayjs(endTime).format('HH:mm:ss')}
+                          onClick={onOpenEndTimePicker}
+                          name="end-time"
+                          type="text"
+                          autoComplete="off"
+                          w="150px"
+                        />
+                        <Box pos="absolute" bottom="0" left="0">
+                          <TimePicker
+                            defaultValue={moment(endTime)}
+                            onChange={handleEndTimeChange}
+                            open={isOpenEndTimePicker}
+                            onClose={onCloseEndTimePicker}
+                            onOpen={onOpenEndTimePicker}
+                            format={'HH:mm:ss'}
+                            inputReadOnly
+                          />
+                        </Box>
+                      </Box>
+
+                      <Button colorScheme="gray" variant="outline" onClick={onOpen}>
+                        <FaRegCalendarAlt />
+                      </Button>
+                    </Box>
+                    <FormHelperText></FormHelperText>
+                  </Box>
                 </Box>
                 <Box>
                   <Input
@@ -131,14 +279,56 @@ const FormCustomNFT: React.FC<{ nftAddress: string; tokenId: string }> = ({ nftA
                   />
                 </Box>
                 <Box>
-                  <Button colorScheme={'blue'} onClick={handleCreateLottery} type="submit" disabled={isSending}>
-                    Create Lottery {isSending && <LoadingSVG />}
+                  <Button
+                    colorScheme={'blue'}
+                    onClick={handleCreateLottery}
+                    type="submit"
+                    disabled={isSending || !selected}
+                  >
+                    Transfer and Create Lottery {isSending && <LoadingSVG />}
                   </Button>
                 </Box>
               </FormControl>
             </Box>
           </Box>
         </Container>
+
+        <Box>
+          <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            blockScrollOnMount={false}
+            isCentered
+            motionPreset="scale"
+            size="3xl"
+          >
+            <ModalOverlay />
+            <ModalContent>
+              <ModalHeader>Select date</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>
+                <Box marginInline="auto" w="fit-content">
+                  <DateRange
+                    onChange={(item: any) => setState([item.selection])}
+                    months={2}
+                    ranges={state}
+                    direction="horizontal"
+                    // scroll={{ enabled: true }}
+                    minDate={dayjs().toDate()}
+                    // maxDate={dayjs().add(900, 'days').toDate()}
+                  />
+                </Box>
+              </ModalBody>
+
+              <ModalFooter>
+                <Button colorScheme="blue" mr={3} onClick={onClose}>
+                  Select
+                </Button>
+                {/* <Button variant="ghost">Secondary Action</Button> */}
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+        </Box>
       </Box>
     </>
   );

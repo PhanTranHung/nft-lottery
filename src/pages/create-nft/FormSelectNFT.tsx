@@ -16,18 +16,17 @@ import { parseNFTMetadata } from '../../utils/nftMetadata';
 import NFTItemSelectable from './NFTItemSelectable';
 
 const FormSelectNFT: React.FC<{
-  onAddressChange?: (elm: ChangeEvent<HTMLInputElement>) => void;
-  onIdChange?: (elm: ChangeEvent<HTMLInputElement>) => void;
-  address?: string;
-  id?: string;
-}> = ({ address = '', id = '', onAddressChange = () => {}, onIdChange = () => {} }) => {
+  selected?: { address: string; tokenId: string };
+  onSelectNFT?: (address: string, tokenId: string) => void;
+}> = ({ selected, onSelectNFT = () => {} }) => {
   const [isSending, setSending] = useState(false);
+  const [isNFTTranfered, setNFTTranfered] = useState(false);
   const [selectedNFT, setSelectedNFT] = useState<{
     address: string;
     tokenId: string;
   }>();
   const { account } = useWeb3React();
-  const approve = useERC721ContractFunction(address.trim(), 'approve');
+  const approve = useERC721ContractFunction(selectedNFT?.address ?? '', 'approve');
   const transferNft = useNFTLotteryPoolFunction('transferNft');
 
   const Moralis = useMoralis();
@@ -36,10 +35,10 @@ const FormSelectNFT: React.FC<{
   const [nftData, setNFTData] = useState<IQueryResult>();
 
   const handleTransferNFT = async () => {
-    const nftAddress = address.trim();
-    const tokenId = id.trim();
+    if (!selectedNFT) return;
+    const { address, tokenId } = selectedNFT;
 
-    if (!isAddress(nftAddress)) return console.log('Error...');
+    if (!isAddress(address)) return console.log('Error...');
 
     setSending(true);
     try {
@@ -47,8 +46,10 @@ const FormSelectNFT: React.FC<{
       console.log('approve:', txResult);
 
       if (txResult.status === 'Success') {
-        const rs = await transferNft.send(nftAddress, tokenId);
+        const rs = await transferNft.send(address, tokenId);
         console.log('transfer:', rs);
+        setNFTTranfered(true);
+        onSelectNFT(address, tokenId);
       }
     } catch (error) {
       console.log(error);
@@ -58,6 +59,7 @@ const FormSelectNFT: React.FC<{
   };
 
   const handleSelectNFT = (address: string, tokenId: string) => {
+    if (isNFTTranfered || isSending) return;
     if (selectedNFT && selectedNFT.address === address && selectedNFT.tokenId === tokenId) {
       return setSelectedNFT(undefined);
     }
@@ -83,6 +85,8 @@ const FormSelectNFT: React.FC<{
     }
   }, [Moralis.isWeb3Enabled, account, Web3Moralis.account]);
 
+  const disableButton = isSending || !!selected || !selectedNFT;
+
   return (
     <>
       <Box>
@@ -105,7 +109,7 @@ const FormSelectNFT: React.FC<{
               </Box>
             </Box>
             <Box>
-              <Button colorScheme={'blue'} onClick={handleTransferNFT} type="submit" disabled={isSending}>
+              <Button colorScheme={'blue'} onClick={handleTransferNFT} type="submit" disabled={disableButton}>
                 Transfer NFT {isSending && <LoadingSVG />}
               </Button>
             </Box>

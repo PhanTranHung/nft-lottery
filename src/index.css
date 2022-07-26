@@ -18,3 +18,9 @@ code {
 .magic-image {
   margin-inline: auto;
 }
+
+a.rc-time-picker-clear,
+div.rc-time-picker-panel-input-wrap,
+input.rc-time-picker-input {
+  display: none !important;
+}
