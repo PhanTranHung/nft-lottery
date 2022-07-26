@@ -25,9 +25,9 @@ import { BiCopy, BiLinkExternal } from 'react-icons/bi';
 import { useParams } from 'react-router-dom';
 import { useOwnerOfNFT, useTokenURI } from '../../contracts/ERC721/hooks';
 import { useMoralis, useMoralisWeb3Api } from 'react-moralis';
-import { ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import { DEFAULT_CHAIN_NAME } from '../../config';
-import { INFTMetadata } from '../../types';
+import { INFTData } from '../../types';
 import { parseNFTMetadata } from '../../utils/nftMetadata';
 import { MagicImage } from '../../components/Image';
 import {
@@ -66,7 +66,7 @@ const DetailNFT: React.FC = () => {
   const { poolAddress = '' } = useParams();
   const { Moralis, isWeb3Enabled } = useMoralis();
   const { token } = useMoralisWeb3Api();
-  const [nftMetadata, setNFTMetadata] = useState<INFTMetadata>();
+  const [nftMetadata, setNFTMetadata] = useState<INFTData>();
   const NFTPrize = usePoolNFTPrize({ poolAddress: poolAddress });
   const NFTPrizeTokenId = usePoolNFTPrizeTokenId({ poolAddress: poolAddress });
   const ticketPrice = usePoolTicketPrice({ poolAddress: poolAddress });

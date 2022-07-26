@@ -1,7 +1,7 @@
 import { Box, FormControl, Heading, Text } from '@chakra-ui/react';
 import { useWeb3React } from '@web3-react/core';
 import { formatUnits, parseEther, parseUnits } from 'ethers/lib/utils';
-import { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useState } from 'react';
 import { LINK, LOTTERY_FACTORY } from '../../address';
 import { LoadingSVG } from '../../assets/Loading';
 import Button from '../../components/Button';

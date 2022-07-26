@@ -13,7 +13,7 @@ import {
 } from '@chakra-ui/react';
 import dayjs from 'dayjs';
 import { formatEther } from 'ethers/lib/utils';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Countdown, { CountdownRendererFn } from 'react-countdown';
 import { useMoralis, useMoralisWeb3Api } from 'react-moralis';
 import { Link } from 'react-router-dom';
@@ -29,7 +29,7 @@ import {
   usePoolTicketSold,
 } from '../../contracts/NFTLotteryPool/hooks';
 import { PoolInfo } from '../../contracts/NFTLottetyPoolFactory/hooks';
-import { INFTMetadata } from '../../types';
+import { INFTData } from '../../types';
 import { parseNFTMetadata } from '../../utils/nftMetadata';
 
 export interface NFTItemProps {
@@ -42,7 +42,7 @@ const NFTItem: React.FC<NFTItemProps> = ({ poolInfo, children }) => {
   const { isWeb3Enabled } = useMoralis();
   const { token } = useMoralisWeb3Api();
 
-  const [nftMetadata, setNFTMetadata] = useState<INFTMetadata>();
+  const [nftMetadata, setNFTMetadata] = useState<INFTData>();
 
   const ticketPrice = usePoolTicketPrice({ poolAddress: poolAddr });
   const startDate = usePoolStartDate({ poolAddress: poolAddr });
