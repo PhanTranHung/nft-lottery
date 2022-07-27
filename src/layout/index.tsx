@@ -15,8 +15,11 @@ const Layout: React.FC<ILayoutProps> = ({ children }) => {
   const { chainId } = useWeb3React();
 
   useEffect(() => {
-    if (chainId && chainId != DEFAULT_CHAIN_ID) requestSwitchNetwork(DEFAULT_CHAIN_ID);
+    if (!!chainId && chainId != DEFAULT_CHAIN_ID) requestSwitchNetwork(DEFAULT_CHAIN_ID);
   }, [chainId]);
+
+  console.log(chainId);
+
   useEffect(() => {
     if (!isWeb3Enabled) enableWeb3();
   }, [enableWeb3, isWeb3Enabled]);

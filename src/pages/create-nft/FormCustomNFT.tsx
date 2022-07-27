@@ -35,6 +35,7 @@ import moment, { Moment } from 'moment';
 import 'react-date-range/dist/styles.css'; // main css file
 import 'react-date-range/dist/theme/default.css'; // theme css file
 import 'rc-time-picker/assets/index.css';
+import { BigNumber } from 'ethers';
 
 const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } }> = ({ selected }) => {
   const [isSending, setSending] = useState(false);
@@ -81,10 +82,10 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
   };
 
   const handleMinSellChange = (elm: ChangeEvent<HTMLInputElement>) => {
-    setMinSell(elm.target.value);
+    setMinSell(parseInt(elm.target.value).toString());
   };
   const handleMaxSellChange = (elm: ChangeEvent<HTMLInputElement>) => {
-    setMaxSell(elm.target.value);
+    setMaxSell(parseInt(elm.target.value).toString());
   };
   const handleMaxHoldChange = (elm: ChangeEvent<HTMLInputElement>) => {
     setMaxHold(elm.target.value);
@@ -122,6 +123,11 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
     }
   };
 
+  const minimunError = BigNumber.from((!!minSell && minSell) ?? '1').lt(1) ? 'Must be at least 1' : '';
+  const maximunError = BigNumber.from((!!maxSell && maxSell) ?? '1').lt((!!minSell && minSell) ?? '1')
+    ? "Can't be smaller than minimun tickets"
+    : '';
+
   return (
     <>
       <Box>
@@ -146,7 +152,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                         <PopoverTrigger>
                           <CInput
                             value={dayjs(state[0].startDate).format('DD/MM/YYYY')}
-                            // onClick={onOpen}
+                            onChange={() => {}}
                             name="start-date"
                             type="text"
                             autoComplete="off"
@@ -164,6 +170,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                         <CInput
                           value={dayjs(startTime).format('HH:mm:ss')}
                           onClick={onOpenStartTimePicker}
+                          onChange={() => {}}
                           name="start-time"
                           type="text"
                           autoComplete="off"
@@ -195,10 +202,10 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                         <PopoverTrigger>
                           <CInput
                             value={dayjs(state[0].endDate).format('DD/MM/YYYY')}
+                            onChange={() => {}}
                             name="end-date"
                             type="text"
                             autoComplete="off"
-                            // onClick={onOpen}
                             w="150px"
                           />
                         </PopoverTrigger>
@@ -216,6 +223,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                       <Box pos="relative">
                         <CInput
                           value={dayjs(endTime).format('HH:mm:ss')}
+                          onChange={() => {}}
                           onClick={onOpenEndTimePicker}
                           name="end-time"
                           type="text"
@@ -258,6 +266,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                     name="maximun-to-sell"
                     label="Maximum Tickets To Sell"
                     type="text"
+                    helperText={minimunError}
                   />
                 </Box>
                 <Box>
@@ -267,6 +276,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                     name="maximun-con-hold"
                     label="Hold (The maximum number of tickets an address can hold. Must be at least 1.)"
                     type="text"
+                    helperText={maximunError}
                   />
                 </Box>
                 <Box>
@@ -274,7 +284,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                     value={price}
                     onChange={handlePriceChange}
                     name="nft-price"
-                    label="Ticket Price (The price in ETH for each ticket)"
+                    label="Ticket Price (The price in BNB for each ticket)"
                     type="text"
                   />
                 </Box>

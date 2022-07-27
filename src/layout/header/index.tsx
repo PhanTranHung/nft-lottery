@@ -10,9 +10,9 @@ export default function Header() {
   const { connector, account, accounts, hooks, provider, isActivating, isActive, chainId, ENSName, ENSNames } =
     useWeb3React();
 
-  useEffect(() => {
-    connector.activate();
-  }, [connector]);
+  // useEffect(() => {
+  //   handleActiveAccount();
+  // }, [connector]);
 
   const handleActiveAccount = () => {
     connector.activate();

@@ -106,7 +106,13 @@ const FormSelectNFT: React.FC<{
               </Text>
             </Box>
             <Box py={'2rem'}>
-              <Box display={'grid'} gridTemplateColumns="repeat(auto-fill, minmax(150px, 1fr))" gridGap={'10px'}>
+              <Box
+                display={'grid'}
+                gridTemplateColumns="repeat(auto-fill, minmax(150px, 1fr))"
+                gridGap={'10px'}
+                maxH="400px"
+                overflowY="scroll"
+              >
                 {nftData?.result?.map((nft, idx) => (
                   <NFTItemSelectable key={idx} nftData={nft} onSelect={handleSelectNFT} selected={selectedNFT} />
                 ))}
