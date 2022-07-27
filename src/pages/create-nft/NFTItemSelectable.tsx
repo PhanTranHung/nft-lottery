@@ -2,6 +2,7 @@ import { Box, Checkbox, Heading, HStack, Radio, Text } from '@chakra-ui/react';
 import React from 'react';
 import { MagicImage } from '../../components/Image';
 import ShortString from '../../components/ShortString';
+import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
 import { INFTData } from '../../types';
 
 interface NFTItemSelectableProps {
@@ -12,6 +13,8 @@ interface NFTItemSelectableProps {
 }
 
 const NFTItemSelectable: React.FC<NFTItemSelectableProps> = ({ nftData, selected, onSelect = () => {} }) => {
+  const [_, copyFn] = useCopyToClipboard({ timeToClear: 4000 });
+
   const handleSelectNFT = () => {
     onSelect(nftData.token_address, nftData.token_id);
   };
@@ -19,6 +22,9 @@ const NFTItemSelectable: React.FC<NFTItemSelectableProps> = ({ nftData, selected
   const isSelected = !!selected && selected.address === nftData.token_address && selected.tokenId === nftData.token_id;
 
   // console.log(isSelected, selected, nftData);
+  const handleCopyAddress = () => {
+    copyFn(nftData.token_address);
+  };
 
   return (
     <>
@@ -45,9 +51,11 @@ const NFTItemSelectable: React.FC<NFTItemSelectableProps> = ({ nftData, selected
           <Heading as={'h2'} fontSize="16px">
             {nftData.name} #{nftData.token_id}
           </Heading>
-          <HStack>
-            <ShortString str={nftData.token_address} />
-          </HStack>
+          <Box cursor="pointer" onClick={handleCopyAddress}>
+            <HStack>
+              <ShortString str={nftData.token_address} />
+            </HStack>
+          </Box>
         </Box>
       </Box>
     </>

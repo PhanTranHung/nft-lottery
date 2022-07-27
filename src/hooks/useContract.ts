@@ -2,6 +2,7 @@ import { useWeb3React } from '@web3-react/core';
 import { ethers } from 'ethers';
 import { useCallback, useEffect, useState } from 'react';
 import { Falsy } from '../types';
+import { useDebounce } from './useDebouce';
 
 export interface ITransactionOptions {
   signer?: ethers.Signer;
@@ -123,12 +124,18 @@ export const useContractCall = <T = any>(
   const [value, setValue] = useState<T | undefined>(undefined);
   const { provider } = useWeb3React();
 
-  if (!call) call = undefined;
+  if (!call) {
+    call = undefined;
+  }
   if (call && !call.args) call.args = [];
+
+  const endCodedData = call && call.contract.interface.encodeFunctionData(call.method, call.args);
+
+  const data = useDebounce(endCodedData, 200);
 
   useEffect(() => {
     handleFetchData();
-  }, [provider, call?.method]); // fix me
+  }, [provider, data]);
 
   const handleFetchData = useCallback(
     async (...params: any[]): Promise<T | undefined> => {

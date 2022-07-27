@@ -11,9 +11,12 @@ import Input from '../../components/Input';
 import { DEFAULT_CHAIN_NAME } from '../../config';
 import { useERC721ContractFunction } from '../../contracts/ERC721/hooks';
 import { useNFTLotteryPoolFunction } from '../../contracts/NFTLottetyPoolFactory/hooks';
+import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
 import { INFTData, IQueryResult } from '../../types';
 import { parseNFTMetadata } from '../../utils/nftMetadata';
 import NFTItemSelectable from './NFTItemSelectable';
+
+const blackList = ['0xf838a42ca56a49a0d73ded4a2977dcbe2688fa4f', '0x5c7d4d07107d79016ce90d84145529e1af8f3747'];
 
 const FormSelectNFT: React.FC<{
   selected?: { address: string; tokenId: string };
@@ -76,8 +79,9 @@ const FormSelectNFT: React.FC<{
         })
         .then((rs) => {
           console.log(rs);
-
-          const data = rs.result?.map((nft) => parseNFTMetadata(nft));
+          const data = rs.result
+            ?.map((nft) => parseNFTMetadata(nft))
+            .filter((nft) => !blackList.includes(nft.token_address));
           setNFTData({ ...rs, result: data });
         })
         .catch(console.error)
