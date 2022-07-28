@@ -19,7 +19,7 @@ import {
   Text,
   useDisclosure,
 } from '@chakra-ui/react';
-import { parseEther, parseUnits } from 'ethers/lib/utils';
+import { isAddress, parseEther, parseUnits } from 'ethers/lib/utils';
 import React, { ChangeEvent, useState } from 'react';
 import { LoadingSVG } from '../../assets/Loading';
 import Button from '../../components/Button';
@@ -36,6 +36,9 @@ import 'react-date-range/dist/styles.css'; // main css file
 import 'react-date-range/dist/theme/default.css'; // theme css file
 import 'rc-time-picker/assets/index.css';
 import { BigNumber } from 'ethers';
+import { isNumeric } from '../../utils/number';
+import { useERC721ContractFunction } from '../../contracts/ERC721/hooks';
+import { LOTTERY_FACTORY } from '../../address';
 
 const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } }> = ({ selected }) => {
   const [isSending, setSending] = useState(false);
@@ -53,6 +56,9 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
   } = useDisclosure();
   const { isOpen: isOpenEndTimePicker, onOpen: onOpenEndTimePicker, onClose: onCloseEndTimePicker } = useDisclosure();
 
+  const approve = useERC721ContractFunction(selected?.address ?? '', 'approve');
+  const transferNft = useNFTLotteryPoolFunction('transferNft');
+
   const [state, setState] = useState([
     {
       startDate: dayjs().toDate(),
@@ -60,8 +66,6 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
       key: 'selection',
     },
   ]);
-
-  console.log(state);
 
   const createNFTLotteryPool = useNFTLotteryPoolFunction('createNFTLotteryPool');
 
@@ -82,51 +86,147 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
   };
 
   const handleMinSellChange = (elm: ChangeEvent<HTMLInputElement>) => {
-    setMinSell(parseInt(elm.target.value).toString());
+    const value = elm.target.value;
+    if (!isNumeric(value)) return;
+    setMinSell(value);
   };
   const handleMaxSellChange = (elm: ChangeEvent<HTMLInputElement>) => {
-    setMaxSell(parseInt(elm.target.value).toString());
+    const value = elm.target.value;
+    if (!isNumeric(value)) return;
+    setMaxSell(value);
   };
   const handleMaxHoldChange = (elm: ChangeEvent<HTMLInputElement>) => {
-    setMaxHold(elm.target.value);
+    const value = elm.target.value;
+    if (!isNumeric(value)) return;
+    setMaxHold(value);
   };
   const handlePriceChange = (elm: ChangeEvent<HTMLInputElement>) => {
-    setPrice(elm.target.value);
+    const value = elm.target.value;
+    if (!isNumeric(value)) return;
+    setPrice(value);
   };
+
+  const minimunError = !minSell
+    ? ''
+    : !isNumeric(minSell)
+    ? 'Must be a number'
+    : BigNumber.from(minSell).lt('1')
+    ? 'Must be at least 1'
+    : '';
+
+  const maximunError = !maxSell
+    ? ''
+    : !isNumeric(maxSell)
+    ? 'Must be a number'
+    : BigNumber.from(maxSell).lt('1')
+    ? 'Must be at least 1'
+    : minimunError || !minSell
+    ? ''
+    : BigNumber.from(maxSell).lt(minSell)
+    ? `Can't be smaller than minimun tickets`
+    : '';
+
+  const maxHoldError = !maxHold
+    ? ''
+    : !isNumeric(maxHold)
+    ? 'Must be a number'
+    : BigNumber.from(maxHold).lt('1')
+    ? 'Must be at least 1'
+    : maximunError || !maxSell
+    ? ''
+    : BigNumber.from(maxHold).gt(maxSell)
+    ? `Can't be greater than maximun tickets`
+    : '';
+
+  const priceError = !price
+    ? ''
+    : !isNumeric(price)
+    ? 'Must be a number'
+    : BigNumber.from(price).lte('0')
+    ? 'Must be greater than 0'
+    : '';
+
+  debugger;
+  const endDateError = dayjs(state[0].endDate).isBefore(state[0].startDate)
+    ? 'End date should be greater than start date'
+    : dayjs(state[0].endDate).isSame(state[0].startDate) && !dayjs(endTime).isAfter(startTime)
+    ? 'End time should be greater than start time'
+    : '';
+
+  // ? ''
+  // : !isNumeric(price)
+  // ? 'Must be a number'
+  // : BigNumber.from(price).lte('0')
+  // ? 'Must be greater than 0'
+  // : '';
+
+  const isError =
+    !minSell ||
+    !maxSell ||
+    !maxHold ||
+    !price ||
+    !!minimunError ||
+    !!maximunError ||
+    !!maxHoldError ||
+    !!priceError ||
+    !!endDateError;
+
+  const disableButton = isError || isSending || !selected;
+
+  const handleTransferNFT = async () => {
+    if (!selected) return;
+    const { address, tokenId } = selected;
+
+    if (!isAddress(address)) return console.log('Error...');
+
+    try {
+      const txResult = await approve.send(LOTTERY_FACTORY, tokenId);
+      console.log('approve:', txResult);
+
+      if (txResult.status === 'Success') {
+        const rs = await transferNft.send(address, tokenId);
+        console.log('transfer:', rs);
+        return true;
+      }
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  };
+
   const handleCreateLottery = async () => {
     console.log(startTime, endTime, minSell, maxSell, maxHold, price);
-    if (!selected) return;
+    if (!selected || isError) return;
+
     const { address, tokenId } = selected;
     const bigPrice = parseUnits(price ?? '0');
 
     try {
       setSending(true);
-      const txResult = await createNFTLotteryPool.send(
-        address,
-        tokenId,
-        startTime,
-        endTime,
-        minSell,
-        maxSell,
-        maxHold,
-        bigPrice,
-        {
-          value: parseEther('0.001'),
-        }
-      );
 
-      console.log('create success', txResult);
+      const tranferResult = await handleTransferNFT();
+      if (tranferResult) {
+        const txResult = await createNFTLotteryPool.send(
+          address,
+          tokenId,
+          startTime,
+          endTime,
+          minSell,
+          maxSell,
+          maxHold,
+          bigPrice,
+          {
+            value: parseEther('0.001'),
+          }
+        );
+        console.log('create success', txResult);
+      }
     } catch (error) {
       console.error(error);
     } finally {
       setSending(false);
     }
   };
-
-  const minimunError = BigNumber.from((!!minSell && minSell) ?? '1').lt(1) ? 'Must be at least 1' : '';
-  const maximunError = BigNumber.from((!!maxSell && maxSell) ?? '1').lt((!!minSell && minSell) ?? '1')
-    ? "Can't be smaller than minimun tickets"
-    : '';
 
   return (
     <>
@@ -188,12 +288,11 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                           />
                         </Box>
                       </Box>
-
                       <Button colorScheme="gray" variant="outline" onClick={onOpen}>
                         <FaRegCalendarAlt />
                       </Button>
                     </Box>
-                    <FormHelperText></FormHelperText>
+                    <FormHelperText minHeight="1rem" color="red.400" mb="0.3125rem"></FormHelperText>
                   </Box>
                   <Box>
                     <FormLabel htmlFor="end-date">End Date</FormLabel>
@@ -247,7 +346,9 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                         <FaRegCalendarAlt />
                       </Button>
                     </Box>
-                    <FormHelperText></FormHelperText>
+                    <FormHelperText minHeight="1rem" color="red.400" mb="0.3125rem">
+                      {endDateError}
+                    </FormHelperText>
                   </Box>
                 </Box>
                 <Box>
@@ -257,6 +358,8 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                     name="minimun-to-sell"
                     label="Minimum Tickets To Sell (Must be at least 1)"
                     type="text"
+                    autoComplete="off"
+                    helperText={minimunError}
                   />
                 </Box>
                 <Box>
@@ -266,7 +369,8 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                     name="maximun-to-sell"
                     label="Maximum Tickets To Sell"
                     type="text"
-                    helperText={minimunError}
+                    autoComplete="off"
+                    helperText={maximunError}
                   />
                 </Box>
                 <Box>
@@ -276,7 +380,8 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                     name="maximun-con-hold"
                     label="Hold (The maximum number of tickets an address can hold. Must be at least 1.)"
                     type="text"
-                    helperText={maximunError}
+                    autoComplete="off"
+                    helperText={maxHoldError}
                   />
                 </Box>
                 <Box>
@@ -286,15 +391,11 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                     name="nft-price"
                     label="Ticket Price (The price in BNB for each ticket)"
                     type="text"
+                    helperText={priceError}
                   />
                 </Box>
                 <Box>
-                  <Button
-                    colorScheme={'blue'}
-                    onClick={handleCreateLottery}
-                    type="submit"
-                    disabled={isSending || !selected}
-                  >
+                  <Button colorScheme={'blue'} onClick={handleCreateLottery} type="submit" disabled={disableButton}>
                     Transfer and Create Lottery {isSending && <LoadingSVG />}
                   </Button>
                 </Box>

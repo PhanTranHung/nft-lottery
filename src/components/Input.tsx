@@ -11,7 +11,9 @@ const Input: React.FC<IProps> = ({ children, label, helperText, name, type, ...o
       <Box>
         <FormLabel htmlFor={name}>{label}</FormLabel>
         <CInput id={name} type={type} name={name} {...others} />
-        <FormHelperText>{helperText}.</FormHelperText>
+        <FormHelperText color="red.400" mb="0.3125rem" minHeight="1rem">
+          {helperText}
+        </FormHelperText>
         {children}
       </Box>
     </>

@@ -16,6 +16,8 @@ const CreateNFT: React.FC = () => {
   const handleNFTAddressChange = (address: string, tokenId: string) => {
     setSelectedNFT({ address, tokenId });
   };
+
+  console.log(selectedNFT);
   return (
     <>
       <Box paddingY="3rem">

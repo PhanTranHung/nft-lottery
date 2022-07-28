@@ -6,10 +6,11 @@ import './index.css';
 import App from './App';
 import theme from './theme';
 import { MoralisProvider } from 'react-moralis';
-import { MORALIST_SERVER_URL, MORALIS_APP_ID } from './config';
+import { MORALIST_SERVER_URL, MORALIS_APP_ID, MORALIS_RPC_URL } from './config';
 
 import { initializeConnector, Web3ReactHooks, Web3ReactProvider } from '@web3-react/core';
 import { MetaMask } from '@web3-react/metamask';
+import DAppProvider from './providers/dapp';
 
 export const [metaMask, hooks] = initializeConnector<MetaMask>((actions) => new MetaMask({ actions }));
 
@@ -21,9 +22,11 @@ root.render(
     <BrowserRouter>
       <ChakraProvider theme={theme}>
         <Web3ReactProvider connectors={connectors}>
-          <MoralisProvider serverUrl={MORALIST_SERVER_URL} appId={MORALIS_APP_ID}>
-            <App />
-          </MoralisProvider>
+          <DAppProvider rpcUrl={MORALIS_RPC_URL}>
+            <MoralisProvider serverUrl={MORALIST_SERVER_URL} appId={MORALIS_APP_ID}>
+              <App />
+            </MoralisProvider>
+          </DAppProvider>
         </Web3ReactProvider>
       </ChakraProvider>
     </BrowserRouter>

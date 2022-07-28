@@ -1,6 +1,7 @@
 import { useWeb3React } from '@web3-react/core';
 import { ethers } from 'ethers';
 import { useCallback, useEffect, useState } from 'react';
+import { useDAppProvider } from '../providers/dapp';
 import { Falsy } from '../types';
 import { useDebounce } from './useDebouce';
 
@@ -122,7 +123,7 @@ export const useContractCall = <T = any>(
   { saveState = true }: { saveState?: boolean } = {}
 ) => {
   const [value, setValue] = useState<T | undefined>(undefined);
-  const { provider } = useWeb3React();
+  const { provider } = useDAppProvider();
 
   if (!call) {
     call = undefined;
@@ -152,7 +153,7 @@ export const useContractCall = <T = any>(
           console.error(error);
         }
       } else {
-        console.error('Provider is not initilazed yet');
+        // console.error('Provider is not initilazed yet');
       }
     },
     //@ts-ignore

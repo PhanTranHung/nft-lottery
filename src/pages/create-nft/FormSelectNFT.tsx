@@ -16,58 +16,62 @@ import { INFTData, IQueryResult } from '../../types';
 import { parseNFTMetadata } from '../../utils/nftMetadata';
 import NFTItemSelectable from './NFTItemSelectable';
 
-const blackList = ['0xf838a42ca56a49a0d73ded4a2977dcbe2688fa4f', '0x5c7d4d07107d79016ce90d84145529e1af8f3747'];
+const blackList = [
+  '0x773190a31ecc87a039a03405751c68992e304b14',
+  '0x8e1c9a064436e46e2d8b27d450a4de28354fd8a8',
+  '0xaf3e8e4736a0811547d7ceeb41a00f042ce09613',
+];
 
 const FormSelectNFT: React.FC<{
   selected?: { address: string; tokenId: string };
   onSelectNFT?: (address: string, tokenId: string) => void;
 }> = ({ selected, onSelectNFT = () => {} }) => {
-  const [isSending, setSending] = useState(false);
-  const [isNFTTranfered, setNFTTranfered] = useState(false);
-  const [selectedNFT, setSelectedNFT] = useState<{
-    address: string;
-    tokenId: string;
-  }>();
+  // const [isSending, setSending] = useState(false);
+  // const [isNFTTranfered, setNFTTranfered] = useState(false);
+  // const [selectedNFT, setSelectedNFT] = useState<{
+  //   address: string;
+  //   tokenId: string;
+  // }>();
   const { account } = useWeb3React();
-  const approve = useERC721ContractFunction(selectedNFT?.address ?? '', 'approve');
-  const transferNft = useNFTLotteryPoolFunction('transferNft');
+  // const approve = useERC721ContractFunction(selectedNFT?.address ?? '', 'approve');
+  // const transferNft = useNFTLotteryPoolFunction('transferNft');
 
   const Moralis = useMoralis();
   const Web3Moralis = useMoralisWeb3Api();
 
   const [nftData, setNFTData] = useState<IQueryResult>();
 
-  const handleTransferNFT = async () => {
-    if (!selectedNFT) return;
-    const { address, tokenId } = selectedNFT;
+  // const handleTransferNFT = async () => {
+  //   if (!selectedNFT) return;
+  //   const { address, tokenId } = selectedNFT;
 
-    if (!isAddress(address)) return console.log('Error...');
+  //   if (!isAddress(address)) return console.log('Error...');
 
-    setSending(true);
-    try {
-      const txResult = await approve.send(LOTTERY_FACTORY, tokenId);
-      console.log('approve:', txResult);
+  //   setSending(true);
+  //   try {
+  //     const txResult = await approve.send(LOTTERY_FACTORY, tokenId);
+  //     console.log('approve:', txResult);
 
-      if (txResult.status === 'Success') {
-        const rs = await transferNft.send(address, tokenId);
-        console.log('transfer:', rs);
-        setNFTTranfered(true);
-        onSelectNFT(address, tokenId);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setSending(false);
-    }
-  };
+  //     if (txResult.status === 'Success') {
+  //       const rs = await transferNft.send(address, tokenId);
+  //       console.log('transfer:', rs);
+  //       setNFTTranfered(true);
+  //       onSelectNFT(address, tokenId);
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   } finally {
+  //     setSending(false);
+  //   }
+  // };
 
-  const handleSelectNFT = (address: string, tokenId: string) => {
-    if (isNFTTranfered || isSending) return;
-    if (selectedNFT && selectedNFT.address === address && selectedNFT.tokenId === tokenId) {
-      return setSelectedNFT(undefined);
-    }
-    setSelectedNFT({ address, tokenId });
-  };
+  // const handleSelectNFT = (address: string, tokenId: string) => {
+  //   if (isNFTTranfered || isSending) return;
+  //   if (selectedNFT && selectedNFT.address === address && selectedNFT.tokenId === tokenId) {
+  //     return setSelectedNFT(undefined);
+  //   }
+  //   setSelectedNFT({ address, tokenId });
+  // };
 
   useEffect(() => {
     if (Moralis.isWeb3Enabled && !!account && isAddress(account)) {
@@ -89,7 +93,7 @@ const FormSelectNFT: React.FC<{
     }
   }, [Moralis.isWeb3Enabled, account, Web3Moralis.account]);
 
-  const disableButton = isSending || !!selected || !selectedNFT;
+  // const disableButton = isSending || !!selected || !selectedNFT;
 
   return (
     <>
@@ -111,18 +115,18 @@ const FormSelectNFT: React.FC<{
                 gridTemplateColumns="repeat(auto-fill, minmax(150px, 1fr))"
                 gridGap={'10px'}
                 maxH="400px"
-                overflowY="scroll"
+                overflowY="auto"
               >
                 {nftData?.result?.map((nft, idx) => (
-                  <NFTItemSelectable key={idx} nftData={nft} onSelect={handleSelectNFT} selected={selectedNFT} />
+                  <NFTItemSelectable key={idx} nftData={nft} onSelect={onSelectNFT} selected={selected} />
                 ))}
               </Box>
             </Box>
-            <Box>
+            {/* <Box>
               <Button colorScheme={'blue'} onClick={handleTransferNFT} type="submit" disabled={disableButton}>
                 Transfer NFT {isSending && <LoadingSVG />}
               </Button>
-            </Box>
+            </Box> */}
           </Box>
         </Container>
       </Box>
