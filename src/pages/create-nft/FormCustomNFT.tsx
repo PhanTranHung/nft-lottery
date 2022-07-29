@@ -4,6 +4,7 @@ import {
   FormHelperText,
   FormLabel,
   Heading,
+  HStack,
   Input as CInput,
   Modal,
   ModalBody,
@@ -39,6 +40,7 @@ import { BigNumber } from 'ethers';
 import { isNumeric } from '../../utils/number';
 import { useERC721ContractFunction } from '../../contracts/ERC721/hooks';
 import { LOTTERY_FACTORY } from '../../address';
+import { useNavigate } from 'react-router-dom';
 
 const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } }> = ({ selected }) => {
   const [isSending, setSending] = useState(false);
@@ -57,8 +59,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
   } = useDisclosure();
   const { isOpen: isOpenEndTimePicker, onOpen: onOpenEndTimePicker, onClose: onCloseEndTimePicker } = useDisclosure();
 
-  // @ts-ignore
-  window.dayjs = dayjs;
+  const navigate = useNavigate();
 
   const approve = useERC721ContractFunction(selected?.address ?? '', 'approve');
   const transferNft = useNFTLotteryPoolFunction('transferNft');
@@ -82,20 +83,14 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
   const createNFTLotteryPool = useNFTLotteryPoolFunction('createNFTLotteryPool');
 
   const handleStartTimeChange = (time: Moment) => {
-    const d = dayjs(time.toDate());
-    const t = d.hour() * d.minute() * d.second();
-
-    console.log(t);
-
-    setState([{ startDate: time.toDate(), endDate, key: 'selection' }]);
+    setStartTime(time.toDate());
   };
   const handleEndTimeChange = (time: Moment) => {
-    setState([{ startDate, endDate: time.toDate(), key: 'selection' }]);
+    setEndTime(time.toDate());
   };
 
   const handleStartDateChange = (date: Date) => {
-    const seconds = startDate.getHours() * startDate.getMinutes() * startDate.getSeconds();
-    setState([{ startDate: dayjs(date).add(seconds, 'seconds').toDate(), endDate, key: 'selection' }]);
+    setState([{ startDate: date, endDate, key: 'selection' }]);
   };
   const handleEndDateChange = (date: Date) => {
     setState([{ startDate, endDate: date, key: 'selection' }]);
@@ -217,7 +212,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
 
     const { startDate, endDate } = state[0];
 
-    const timeZoneOffset = Math.abs(new Date().getTimezoneOffset());
+    const timeZoneOffset = Math.abs(new Date(0).getTimezoneOffset());
 
     const { address, tokenId } = selected;
     const bigPrice = parseUnits(price ?? '0');
@@ -246,6 +241,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
           }
         );
         console.log('create success', txResult);
+        navigate('/list-lottery');
       }
     } catch (error) {
       console.error(error);
@@ -295,7 +291,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
 
                       <Box pos="relative">
                         <CInput
-                          value={dayjs(startDate).format('HH:mm:ss')}
+                          value={dayjs(startTime).format('HH:mm:ss')}
                           onClick={onOpenStartTimePicker}
                           onChange={() => {}}
                           name="start-time"
@@ -306,7 +302,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                         />
                         <Box pos="absolute" bottom="0" left="0">
                           <TimePicker
-                            defaultValue={moment(startDate)}
+                            defaultValue={moment(startTime)}
                             onChange={handleStartTimeChange}
                             open={isOpenStartTimePicker}
                             onClose={onCloseStartTimePicker}
@@ -346,7 +342,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
 
                       <Box pos="relative">
                         <CInput
-                          value={dayjs(endDate).format('HH:mm:ss')}
+                          value={dayjs(endTime).format('HH:mm:ss')}
                           onChange={() => {}}
                           onClick={onOpenEndTimePicker}
                           name="end-time"
@@ -357,7 +353,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                         />
                         <Box pos="absolute" bottom="0" left="0">
                           <TimePicker
-                            defaultValue={moment(endDate)}
+                            defaultValue={moment(endTime)}
                             onChange={handleEndTimeChange}
                             open={isOpenEndTimePicker}
                             onClose={onCloseEndTimePicker}
@@ -420,12 +416,12 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                     helperText={priceError}
                   />
                 </Box>
-                <Box>
+                <HStack gap="1rem">
                   <Button colorScheme={'blue'} onClick={handleCreateLottery} type="submit" disabled={disableButton}>
                     Transfer and Create Lottery {isSending && <LoadingSVG />}
                   </Button>
                   {isSending && status}
-                </Box>
+                </HStack>
               </FormControl>
             </Box>
           </Box>

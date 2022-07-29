@@ -1,4 +1,4 @@
-import { Box, FormControl, Heading, Text } from '@chakra-ui/react';
+import { Box, Center, FormControl, Heading, Text } from '@chakra-ui/react';
 import { useWeb3React } from '@web3-react/core';
 import { isAddress } from 'ethers/lib/utils';
 import React, { ChangeEvent, useEffect, useState } from 'react';
@@ -22,6 +22,7 @@ const blackList = [
   '0xaf3e8e4736a0811547d7ceeb41a00f042ce09613',
   '0x39642023b442a747c38e7af90028df5e3c05d053',
   '0xbaa8f61b089e8e2ae9524f1dfb87a01249906480',
+  '0xf838a42ca56a49a0d73ded4a2977dcbe2688fa4f',
 ];
 
 const FormSelectNFT: React.FC<{
@@ -34,7 +35,18 @@ const FormSelectNFT: React.FC<{
   //   address: string;
   //   tokenId: string;
   // }>();
-  const { account } = useWeb3React();
+
+  const { connector, account, accounts, hooks, provider, isActivating, isActive, chainId, ENSName, ENSNames } =
+    useWeb3React();
+
+  // useEffect(() => {
+  //   handleActiveAccount();
+  // }, [connector]);
+
+  const handleActiveAccount = () => {
+    connector.activate();
+  };
+
   // const approve = useERC721ContractFunction(selectedNFT?.address ?? '', 'approve');
   // const transferNft = useNFTLotteryPoolFunction('transferNft');
 
@@ -112,6 +124,15 @@ const FormSelectNFT: React.FC<{
               </Text>
             </Box>
             <Box py={'2rem'}>
+              {!isActive && (
+                <Box p="1rem">
+                  <Center>
+                    <Button colorScheme="red" size="md" onClick={handleActiveAccount} disabled={isActivating}>
+                      Connect wallet to see your NFT
+                    </Button>
+                  </Center>
+                </Box>
+              )}
               <Box
                 display={'grid'}
                 gridTemplateColumns="repeat(auto-fill, minmax(150px, 1fr))"
@@ -120,7 +141,12 @@ const FormSelectNFT: React.FC<{
                 overflowY="auto"
               >
                 {nftData?.result?.map((nft, idx) => (
-                  <NFTItemSelectable key={idx} nftData={nft} onSelect={onSelectNFT} selected={selected} />
+                  <NFTItemSelectable
+                    key={`${nft.token_address}+${nft.token_id}`}
+                    nftData={nft}
+                    onSelect={onSelectNFT}
+                    selected={selected}
+                  />
                 ))}
               </Box>
             </Box>

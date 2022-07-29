@@ -1,4 +1,4 @@
-import { Box, FormControl, Heading, Text } from '@chakra-ui/react';
+import { Box, FormControl, Heading, HStack, Text } from '@chakra-ui/react';
 import { useWeb3React } from '@web3-react/core';
 import { formatUnits, parseEther, parseUnits } from 'ethers/lib/utils';
 import React, { ChangeEvent, useState } from 'react';
@@ -61,9 +61,12 @@ const FormApproveNFT: React.FC = () => {
                 </Box>
                 <Box>
                   <Text>Your LINK Balance: {tokenLinkBalance}</Text>
-                  <Button colorScheme={'blue'} onClick={handleApprove} disabled={isSending}>
-                    Link Approved {isSending && <LoadingSVG />}
-                  </Button>
+                  <HStack gap="2rem">
+                    <Button colorScheme={'blue'} onClick={handleApprove} disabled={isSending}>
+                      Link Approved {isSending && <LoadingSVG />}
+                    </Button>
+                    {approve.state.status !== 'None' && <Text color="red.300">State: {approve.state.status}</Text>}
+                  </HStack>
                 </Box>
               </FormControl>
             </Box>
