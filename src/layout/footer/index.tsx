@@ -1,3 +1,4 @@
+import React from 'react';
 import { Box, Flex, HStack, Image, Spacer, Text } from '@chakra-ui/react';
 import Container from '../../components/Container';
 import { FaFacebook, FaGooglePlus, FaInstagram } from 'react-icons/fa';

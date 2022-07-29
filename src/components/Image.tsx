@@ -1,3 +1,4 @@
+import React from 'react';
 import { Image, ImageProps } from '@chakra-ui/react';
 import { useEffect, useMemo, useState } from 'react';
 

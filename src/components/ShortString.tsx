@@ -1,3 +1,4 @@
+import React from 'react';
 import { Box, Flex, HStack, Image, Text, VStack } from '@chakra-ui/react';
 import { useMemo } from 'react';
 

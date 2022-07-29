@@ -1,3 +1,4 @@
+import React from 'react';
 import { Box, Button, Center, Flex, HStack, Image, Spacer } from '@chakra-ui/react';
 import { useWeb3React } from '@web3-react/core';
 import { useMemo } from 'react';

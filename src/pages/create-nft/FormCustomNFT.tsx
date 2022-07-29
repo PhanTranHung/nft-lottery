@@ -121,7 +121,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
     ? ''
     : !isNumeric(minSell)
     ? 'Must be a number'
-    : BigNumber.from(minSell).lt('1')
+    : parseFloat(minSell) < 1
     ? 'Must be at least 1'
     : '';
 
@@ -129,11 +129,11 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
     ? ''
     : !isNumeric(maxSell)
     ? 'Must be a number'
-    : BigNumber.from(maxSell).lt('1')
+    : parseFloat(maxSell) < 1
     ? 'Must be at least 1'
     : minimunError || !minSell
     ? ''
-    : BigNumber.from(maxSell).lt(minSell)
+    : parseFloat(maxSell) < parseFloat(minSell)
     ? `Can't be smaller than minimun tickets`
     : '';
 
@@ -141,11 +141,11 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
     ? ''
     : !isNumeric(maxHold)
     ? 'Must be a number'
-    : BigNumber.from(maxHold).lt('1')
+    : parseFloat(maxHold) < 1
     ? 'Must be at least 1'
     : maximunError || !maxSell
     ? ''
-    : BigNumber.from(maxHold).gt(maxSell)
+    : parseFloat(maxHold) > parseFloat(maxSell)
     ? `Can't be greater than maximun tickets`
     : '';
 
@@ -153,7 +153,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
     ? ''
     : !isNumeric(price)
     ? 'Must be a number'
-    : BigNumber.from(price).lte('0')
+    : parseFloat(price) <= 0
     ? 'Must be greater than 0'
     : '';
 

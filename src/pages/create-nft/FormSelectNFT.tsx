@@ -23,6 +23,7 @@ const blackList = [
   '0x39642023b442a747c38e7af90028df5e3c05d053',
   '0xbaa8f61b089e8e2ae9524f1dfb87a01249906480',
   '0xf838a42ca56a49a0d73ded4a2977dcbe2688fa4f',
+  '0xe81124918ccbf85b2baa6cb94c4fe5dadf6d2532',
 ];
 
 const FormSelectNFT: React.FC<{
@@ -96,7 +97,7 @@ const FormSelectNFT: React.FC<{
           limit: 100,
         })
         .then((rs) => {
-          console.log(rs);
+          // console.log(rs);
           const data = rs.result
             ?.map((nft) => parseNFTMetadata(nft))
             .filter((nft) => !blackList.includes(nft.token_address));

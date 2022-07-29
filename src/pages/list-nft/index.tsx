@@ -1,3 +1,4 @@
+import React from 'react';
 import { Box, Center, Heading } from '@chakra-ui/react';
 import Container from '../../components/Container';
 import BrowseNFT from './BrowseNFT';

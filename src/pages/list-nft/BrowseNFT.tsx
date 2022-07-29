@@ -1,3 +1,4 @@
+import React from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import { useGetAllPool } from '../../contracts/NFTLottetyPoolFactory/hooks';
 import NFTItem from './NFTItem';
