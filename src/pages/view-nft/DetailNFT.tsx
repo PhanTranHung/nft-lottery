@@ -98,6 +98,8 @@ const DetailNFT: React.FC = () => {
   const isDrawable = (ticketSold.amount ?? 0) >= (minSell.amount ?? 0);
   const isNotRefundedNFTYet = nftOwner.address === poolAddress;
 
+  console.log(startDate.timestamp, endDate.timestamp);
+
   useEffect(() => {
     if (poolOver.isOver) return setState('Over');
     if (!startDate.timestamp || !endDate.timestamp) return setState('None');

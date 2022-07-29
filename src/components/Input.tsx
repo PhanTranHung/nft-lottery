@@ -1,3 +1,4 @@
+import React from 'react';
 import { Box, FormControl, FormHelperText, FormLabel, Image, Input as CInput, InputProps } from '@chakra-ui/react';
 
 interface IProps extends InputProps {

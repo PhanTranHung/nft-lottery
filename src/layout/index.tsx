@@ -1,5 +1,5 @@
 import { useWeb3React } from '@web3-react/core';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useMoralis } from 'react-moralis';
 import { DEFAULT_CHAIN_ID } from '../config';
 import { requestSwitchNetwork } from '../utils/networks';
@@ -12,7 +12,7 @@ interface ILayoutProps {
 
 const Layout: React.FC<ILayoutProps> = ({ children }) => {
   const { enableWeb3, isWeb3Enabled } = useMoralis();
-  const { chainId } = useWeb3React();
+  const { chainId, isActive } = useWeb3React();
 
   useEffect(() => {
     if (!!chainId && chainId != DEFAULT_CHAIN_ID) requestSwitchNetwork(DEFAULT_CHAIN_ID);
@@ -21,8 +21,8 @@ const Layout: React.FC<ILayoutProps> = ({ children }) => {
   console.log(chainId);
 
   useEffect(() => {
-    if (!isWeb3Enabled) enableWeb3();
-  }, [enableWeb3, isWeb3Enabled]);
+    if (!isWeb3Enabled && isActive) enableWeb3();
+  }, [enableWeb3, isWeb3Enabled, isActive]);
 
   return (
     <>

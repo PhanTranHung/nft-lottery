@@ -24,7 +24,7 @@ import React, { ChangeEvent, useState } from 'react';
 import { LoadingSVG } from '../../assets/Loading';
 import Button from '../../components/Button';
 import Container from '../../components/Container';
-import { useNFTLotteryPoolFunction } from '../../contracts/NFTLottetyPoolFactory/hooks';
+import { useNFTLotteryPoolFunction, usePoolFee } from '../../contracts/NFTLottetyPoolFactory/hooks';
 import { DateRange, Calendar } from 'react-date-range';
 import dayjs from 'dayjs';
 import TimePicker from 'rc-time-picker';
@@ -48,6 +48,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
   const [maxSell, setMaxSell] = useState('');
   const [maxHold, setMaxHold] = useState('');
   const [price, setPrice] = useState('');
+  const poolFee = usePoolFee();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isOpenStartTimePicker,
@@ -55,6 +56,9 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
     onClose: onCloseStartTimePicker,
   } = useDisclosure();
   const { isOpen: isOpenEndTimePicker, onOpen: onOpenEndTimePicker, onClose: onCloseEndTimePicker } = useDisclosure();
+
+  // @ts-ignore
+  window.dayjs = dayjs;
 
   const approve = useERC721ContractFunction(selected?.address ?? '', 'approve');
   const transferNft = useNFTLotteryPoolFunction('transferNft');
@@ -67,22 +71,34 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
     },
   ]);
 
+  const { startDate, endDate } = state[0];
+
+  const [status, setStatus] = useState<'Approving NFT' | 'Transfering NFT' | 'Creating NFT lottery pool' | 'None'>(
+    'None'
+  );
+
+  // console.log(endDate, startDate);
+
   const createNFTLotteryPool = useNFTLotteryPoolFunction('createNFTLotteryPool');
 
   const handleStartTimeChange = (time: Moment) => {
-    setStartTime(time.toDate());
+    const d = dayjs(time.toDate());
+    const t = d.hour() * d.minute() * d.second();
+
+    console.log(t);
+
+    setState([{ startDate: time.toDate(), endDate, key: 'selection' }]);
   };
   const handleEndTimeChange = (time: Moment) => {
-    setEndTime(time.toDate());
+    setState([{ startDate, endDate: time.toDate(), key: 'selection' }]);
   };
 
   const handleStartDateChange = (date: Date) => {
-    state[0].startDate = date;
-    setState([...state]);
+    const seconds = startDate.getHours() * startDate.getMinutes() * startDate.getSeconds();
+    setState([{ startDate: dayjs(date).add(seconds, 'seconds').toDate(), endDate, key: 'selection' }]);
   };
   const handleEndDateChange = (date: Date) => {
-    state[0].endDate = date;
-    setState([...state]);
+    setState([{ startDate, endDate: date, key: 'selection' }]);
   };
 
   const handleMinSellChange = (elm: ChangeEvent<HTMLInputElement>) => {
@@ -146,10 +162,9 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
     ? 'Must be greater than 0'
     : '';
 
-  debugger;
-  const endDateError = dayjs(state[0].endDate).isBefore(state[0].startDate)
+  const endDateError = dayjs(endDate).isBefore(startDate)
     ? 'End date should be greater than start date'
-    : dayjs(state[0].endDate).isSame(state[0].startDate) && !dayjs(endTime).isAfter(startTime)
+    : dayjs(endDate).isSame(startDate) && !dayjs(endTime).isAfter(startTime)
     ? 'End time should be greater than start time'
     : '';
 
@@ -180,10 +195,12 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
     if (!isAddress(address)) return console.log('Error...');
 
     try {
+      setStatus('Approving NFT');
       const txResult = await approve.send(LOTTERY_FACTORY, tokenId);
       console.log('approve:', txResult);
 
       if (txResult.status === 'Success') {
+        setStatus('Transfering NFT');
         const rs = await transferNft.send(address, tokenId);
         console.log('transfer:', rs);
         return true;
@@ -198,25 +215,34 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
     console.log(startTime, endTime, minSell, maxSell, maxHold, price);
     if (!selected || isError) return;
 
+    const { startDate, endDate } = state[0];
+
+    const timeZoneOffset = Math.abs(new Date().getTimezoneOffset());
+
     const { address, tokenId } = selected;
     const bigPrice = parseUnits(price ?? '0');
 
+    const startDateTimeInSecond = dayjs(startDate).unix() + dayjs(startTime).add(timeZoneOffset, 'minutes').unix();
+    const endDateTimeInSecond = dayjs(endDate).unix() + dayjs(endTime).add(timeZoneOffset, 'minutes').unix();
+
+    console.log(startDateTimeInSecond, endDateTimeInSecond);
+
     try {
       setSending(true);
-
       const tranferResult = await handleTransferNFT();
       if (tranferResult) {
+        setStatus('Creating NFT lottery pool');
         const txResult = await createNFTLotteryPool.send(
           address,
           tokenId,
-          startTime,
-          endTime,
+          startDateTimeInSecond,
+          endDateTimeInSecond,
           minSell,
           maxSell,
           maxHold,
           bigPrice,
           {
-            value: parseEther('0.001'),
+            value: poolFee.amount,
           }
         );
         console.log('create success', txResult);
@@ -251,34 +277,36 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                       <Popover>
                         <PopoverTrigger>
                           <CInput
-                            value={dayjs(state[0].startDate).format('DD/MM/YYYY')}
+                            value={dayjs(startDate).format('DD/MM/YYYY')}
                             onChange={() => {}}
                             name="start-date"
                             type="text"
                             autoComplete="off"
                             w="150px"
+                            disabled={isSending}
                           />
                         </PopoverTrigger>
                         <PopoverContent w="auto">
                           <Box>
-                            <Calendar onChange={handleStartDateChange} date={state[0].startDate} minDate={new Date()} />
+                            <Calendar onChange={handleStartDateChange} date={startDate} minDate={new Date()} />
                           </Box>
                         </PopoverContent>
                       </Popover>
 
                       <Box pos="relative">
                         <CInput
-                          value={dayjs(startTime).format('HH:mm:ss')}
+                          value={dayjs(startDate).format('HH:mm:ss')}
                           onClick={onOpenStartTimePicker}
                           onChange={() => {}}
                           name="start-time"
                           type="text"
                           autoComplete="off"
                           w="150px"
+                          disabled={isSending}
                         />
                         <Box pos="absolute" bottom="0" left="0">
                           <TimePicker
-                            defaultValue={moment(startTime)}
+                            defaultValue={moment(startDate)}
                             onChange={handleStartTimeChange}
                             open={isOpenStartTimePicker}
                             onClose={onCloseStartTimePicker}
@@ -300,38 +328,36 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                       <Popover>
                         <PopoverTrigger>
                           <CInput
-                            value={dayjs(state[0].endDate).format('DD/MM/YYYY')}
+                            value={dayjs(endDate).format('DD/MM/YYYY')}
                             onChange={() => {}}
                             name="end-date"
                             type="text"
                             autoComplete="off"
                             w="150px"
+                            disabled={isSending}
                           />
                         </PopoverTrigger>
                         <PopoverContent w="auto">
                           <Box>
-                            <Calendar
-                              onChange={handleEndDateChange}
-                              date={state[0].endDate}
-                              minDate={state[0].startDate}
-                            />
+                            <Calendar onChange={handleEndDateChange} date={endDate} minDate={startDate} />
                           </Box>
                         </PopoverContent>
                       </Popover>
 
                       <Box pos="relative">
                         <CInput
-                          value={dayjs(endTime).format('HH:mm:ss')}
+                          value={dayjs(endDate).format('HH:mm:ss')}
                           onChange={() => {}}
                           onClick={onOpenEndTimePicker}
                           name="end-time"
                           type="text"
                           autoComplete="off"
                           w="150px"
+                          disabled={isSending}
                         />
                         <Box pos="absolute" bottom="0" left="0">
                           <TimePicker
-                            defaultValue={moment(endTime)}
+                            defaultValue={moment(endDate)}
                             onChange={handleEndTimeChange}
                             open={isOpenEndTimePicker}
                             onClose={onCloseEndTimePicker}
@@ -398,6 +424,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                   <Button colorScheme={'blue'} onClick={handleCreateLottery} type="submit" disabled={disableButton}>
                     Transfer and Create Lottery {isSending && <LoadingSVG />}
                   </Button>
+                  {isSending && status}
                 </Box>
               </FormControl>
             </Box>

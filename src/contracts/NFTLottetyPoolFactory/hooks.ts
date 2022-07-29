@@ -26,3 +26,13 @@ export const useGetAllPool = () => {
 
   return { allPool: value, fetch };
 };
+
+export const usePoolFee = () => {
+  const { value, fetch } = useContractCall<BigNumber | undefined>({
+    contract: NFTLottetyPoolFactoryContract,
+    method: 'poolFee',
+    args: [],
+  });
+
+  return { amount: value, fetch };
+};
