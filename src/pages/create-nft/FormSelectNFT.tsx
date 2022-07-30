@@ -97,10 +97,11 @@ const FormSelectNFT: React.FC<{
           limit: 100,
         })
         .then((rs) => {
-          // console.log(rs);
+          console.log(rs);
           const data = rs.result
             ?.map((nft) => parseNFTMetadata(nft))
-            .filter((nft) => !blackList.includes(nft.token_address));
+            .filter((nft) => !blackList.includes(nft.token_address))
+            .filter((nft) => nft.contract_type === 'ERC721');
           setNFTData({ ...rs, result: data });
         })
         .catch(console.error)
