@@ -232,3 +232,24 @@ export const usePoolOwner = ({ poolAddress = '', fallback = false }: Options) =>
 
   return { address: value as string | undefined, fetch };
 };
+
+export const useTokenURI = ({
+  tokenId,
+  poolAddress = '',
+  fallback = false,
+}: Options & { tokenId: string | number | BigNumber }) => {
+  const contract =
+    useMemo(() => getNFTLotteryPoolContract(poolAddress), [poolAddress]) ??
+    (fallback ? NFTLotteryPoolContract : undefined);
+
+  const { value, fetch } = useContractCall(
+    contract &&
+      tokenId && {
+        contract: contract,
+        method: 'tokenURI',
+        args: [tokenId],
+      }
+  );
+
+  return { uri: value as string | undefined, fetch };
+};

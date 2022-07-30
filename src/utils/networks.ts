@@ -111,3 +111,10 @@ export async function requestSwitchNetwork(chainId: number) {
     alert('MetaMask is not installed. Please consider installing it: https://metamask.io/download.html');
   }
 }
+
+export function isUrlValid(url: string) {
+  var regexQuery =
+    '^(https?://)?([-a-z0-9]{1,63}\\.)*?[a-z0-9][-a-z0-9]{0,61}[a-z0-9]\\.[a-z]{2,6}(/[-\\w@\\+\\.~#\\?&/=%]*)?$';
+  var urlRegex = new RegExp(regexQuery, 'i');
+  return urlRegex.test(url);
+}

@@ -7,7 +7,6 @@ import {
   Box,
   Button,
   Center,
-  Divider,
   Flex,
   FormControl,
   Grid,
@@ -23,12 +22,8 @@ import Countdown, { CountdownRendererFn } from 'react-countdown';
 import ShortString from '../../components/ShortString';
 import { BiCopy, BiLinkExternal } from 'react-icons/bi';
 import { useParams } from 'react-router-dom';
-import { useOwnerOfNFT, useTokenURI } from '../../contracts/ERC721/hooks';
-import { useMoralis, useMoralisWeb3Api } from 'react-moralis';
+import { useOwnerOfNFT } from '../../contracts/ERC721/hooks';
 import React, { ChangeEvent, useEffect, useState } from 'react';
-import { DEFAULT_CHAIN_NAME } from '../../config';
-import { INFTData } from '../../types';
-import { parseNFTMetadata } from '../../utils/nftMetadata';
 import { MagicImage } from '../../components/Image';
 import {
   useNFTLotteryPoolContractFunction,
@@ -50,6 +45,7 @@ import { LoadingSVG } from '../../assets/Loading';
 import { useWeb3React } from '@web3-react/core';
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
 import dayjs from 'dayjs';
+import { useTokenMetadata } from '../../contracts/NFT/hook';
 
 export interface DetailNFTProps {
   children?: React.ReactNode;
@@ -64,11 +60,9 @@ const DetailNFT: React.FC = () => {
   const [amountToBuy, setAmountToBuy] = useState('1');
   const { account } = useWeb3React();
   const { poolAddress = '' } = useParams();
-  const { Moralis, isWeb3Enabled } = useMoralis();
-  const { token } = useMoralisWeb3Api();
-  const [nftMetadata, setNFTMetadata] = useState<INFTData>();
   const NFTPrize = usePoolNFTPrize({ poolAddress: poolAddress });
   const NFTPrizeTokenId = usePoolNFTPrizeTokenId({ poolAddress: poolAddress });
+  const { metadata, fetch } = useTokenMetadata({ address: NFTPrize.address, tokenId: NFTPrizeTokenId.tokenId });
   const ticketPrice = usePoolTicketPrice({ poolAddress: poolAddress });
   const startDate = usePoolStartDate({ poolAddress: poolAddress });
   const endDate = usePoolEndDate({ poolAddress: poolAddress });
@@ -109,21 +103,21 @@ const DetailNFT: React.FC = () => {
     if (dayjs().isAfter(endDate.timestamp)) return setState('End');
   }, [startDate.timestamp, endDate.timestamp, poolOver.isOver]);
 
-  useEffect(() => {
-    if (isWeb3Enabled && NFTPrize.address && NFTPrizeTokenId.tokenId) {
-      token
-        .getTokenIdMetadata({
-          address: NFTPrize.address,
-          token_id: NFTPrizeTokenId.tokenId,
-          chain: DEFAULT_CHAIN_NAME,
-        })
-        .then((data) => {
-          const dataParsed = parseNFTMetadata(data);
-          setNFTMetadata(dataParsed);
-        })
-        .catch((e) => console.error(e));
-    }
-  }, [isWeb3Enabled, token, NFTPrize.address, NFTPrizeTokenId.tokenId]);
+  // useEffect(() => {
+  //   if (isWeb3Enabled && NFTPrize.address && NFTPrizeTokenId.tokenId) {
+  //     token
+  //       .getTokenIdMetadata({
+  //         address: NFTPrize.address,
+  //         token_id: NFTPrizeTokenId.tokenId,
+  //         chain: DEFAULT_CHAIN_NAME,
+  //       })
+  //       .then((data) => {
+  //         const dataParsed = parseNFTMetadata(data);
+  //         setNFTMetadata(dataParsed);
+  //       })
+  //       .catch((e) => console.error(e));
+  //   }
+  // }, [isWeb3Enabled, token, NFTPrize.address, NFTPrizeTokenId.tokenId]);
 
   const coundownRenderer: CountdownRendererFn = ({
     completed,
@@ -216,7 +210,7 @@ const DetailNFT: React.FC = () => {
   };
 
   const handleCopyToClipboard = () => {
-    copyToClipboard(nftMetadata?.token_address);
+    copyToClipboard(NFTPrize.address);
   };
 
   const refetchAll = () => {
@@ -245,7 +239,7 @@ const DetailNFT: React.FC = () => {
           <Box className="v-d-box-image">
             <Center>
               <Box>
-                <MagicImage src={nftMetadata?.metadata_parsed?.image} />
+                <MagicImage src={metadata?.image} />
               </Box>
             </Center>
             <Box>
@@ -291,7 +285,7 @@ const DetailNFT: React.FC = () => {
           <Flex direction={'column'}>
             <Box>
               <Heading as="h2" color="blue.400">
-                {nftMetadata?.name} #{NFTPrizeTokenId.tokenId}
+                {metadata?.name} #{NFTPrizeTokenId.tokenId}
               </Heading>
               <Box onClick={handleCopyToClipboard} className="v-d-box-little-text">
                 <HStack>
@@ -463,7 +457,7 @@ const DetailNFT: React.FC = () => {
                     </AccordionButton>
                   </h2>
                   <AccordionPanel pb={4}>
-                    <Box className="v-d-metadata-des">{nftMetadata?.metadata_parsed?.description}</Box>
+                    <Box className="v-d-metadata-des">{metadata?.description}</Box>
                   </AccordionPanel>
                 </AccordionItem>
               </Accordion>
