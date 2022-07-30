@@ -21,7 +21,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { isAddress, parseEther, parseUnits } from 'ethers/lib/utils';
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import { LoadingSVG } from '../../assets/Loading';
 import Button from '../../components/Button';
 import Container from '../../components/Container';
@@ -63,10 +63,10 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
 
   const approve = useERC721ContractFunction(selected?.address ?? '', 'approve');
   const transferNft = useNFTLotteryPoolFunction('transferNft');
-
+  const [startTimeError, setStartTimeError] = useState(false);
   const [state, setState] = useState([
     {
-      startDate: dayjs().toDate(),
+      startDate: dayjs().add(1, 'day').toDate(),
       endDate: dayjs().add(7, 'days').toDate(),
       key: 'selection',
     },
@@ -157,6 +157,8 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
     ? 'Must be greater than 0'
     : '';
 
+  const startDateError = startTimeError ? 'Start time should be greater than current time' : '';
+
   const endDateError = dayjs(endDate).isBefore(startDate)
     ? 'End date should be greater than start date'
     : dayjs(endDate).isSame(startDate) && !dayjs(endTime).isAfter(startTime)
@@ -179,6 +181,7 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
     !!maximunError ||
     !!maxHoldError ||
     !!priceError ||
+    !!startDateError ||
     !!endDateError;
 
   const disableButton = isError || isSending || !selected;
@@ -205,6 +208,23 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
       return false;
     }
   };
+
+  useEffect(() => {
+    const timeZoneOffset = Math.abs(new Date(0).getTimezoneOffset());
+    const intervalId = setInterval(() => {
+      const start = dayjs(startDate).add(startTime.valueOf(), 'milliseconds').add(timeZoneOffset, 'minutes');
+      const isStartTimeError = dayjs().isAfter(start);
+
+      console.log(isStartTimeError);
+
+      if (isStartTimeError) return setStartTimeError(true);
+      else if (startTimeError) return setStartTimeError(false);
+    }, 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [startDate, startTime, startTimeError]);
 
   const handleCreateLottery = async () => {
     console.log(startTime, endTime, minSell, maxSell, maxHold, price);
@@ -316,7 +336,9 @@ const FormCustomNFT: React.FC<{ selected?: { address: string; tokenId: string } 
                         <FaRegCalendarAlt />
                       </Button>
                     </Box>
-                    <FormHelperText minHeight="1rem" color="red.400" mb="0.3125rem"></FormHelperText>
+                    <FormHelperText minHeight="1rem" color="red.400" mb="0.3125rem">
+                      {startDateError}
+                    </FormHelperText>
                   </Box>
                   <Box>
                     <FormLabel htmlFor="end-date">End Date</FormLabel>
